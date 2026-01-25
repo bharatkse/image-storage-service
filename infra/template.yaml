@@ -1,0 +1,628 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: Image storage - Production-ready serverless template with monitoring and security
+
+Parameters:
+  Stage:
+    Type: String
+    Default: snd
+    AllowedValues: [snd, dev, uat, prod]
+    Description: Deployment stage
+
+  ServiceName:
+    Type: String
+    Default: image-storage
+    Description: Service name prefix
+
+  ApiVersion:
+    Type: String
+    Default: v1
+    Description: API version
+
+  RateLimitPerSecond:
+    Type: Number
+    Default: 50
+    Description: API rate limit per second
+
+  RateLimitBurst:
+    Type: Number
+    Default: 100
+    Description: API rate limit burst
+
+  RateLimitQuotaPerDay:
+    Type: Number
+    Default: 10000
+    Description: API rate limit quota per day
+
+  SamArtifactsBucket:
+    Type: String
+    Default: image-storage-sam-artifacts
+    Description: S3 bucket for SAM artifacts
+
+Globals:
+  Function:
+    Runtime: python3.10
+    Architectures:
+      - x86_64
+    Timeout: 30
+    MemorySize: 512
+    Tracing: Active
+    Environment:
+      Variables:
+        POWERTOOLS_LOG_LEVEL: INFO
+        POWERTOOLS_SERVICE_NAME: !Ref ServiceName
+        POWERTOOLS_METRICS_NAMESPACE: !Sub "${ServiceName}-${Stage}"
+        POWERTOOLS_LOGGER_SAMPLE_RATE: 0.1
+        POWERTOOLS_LOGGER_LOG_EVENT: true
+        ENVIRONMENT: !Ref Stage
+        AWS_ENDPOINT_URL: http://localhost:4566
+
+Resources:
+  # ----------------------------------------------------------------------------
+  # S3 Bucket for Image Storage with Security and Lifecycle Policies
+  # ----------------------------------------------------------------------------
+  ImageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ServiceName}-images-${Stage}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 30
+          - Id: TransitionToIA
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: STANDARD_IA
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            AllowedOrigins:
+              - "*"
+            MaxAge: 3600
+            ExposedHeaders:
+              - ETag
+              - x-amz-request-id
+      Tags:
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Service
+          Value: !Ref ServiceName
+
+  # ----------------------------------------------------------------------------
+  # DynamoDB Table with GSIs and Advanced Features
+  # ----------------------------------------------------------------------------
+  ImageMetadataTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${ServiceName}-metadata-${Stage}"
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: image_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
+        - AttributeName: image_name
+          AttributeType: S
+        - AttributeName: file_hash
+          AttributeType: S
+      KeySchema:
+        - AttributeName: image_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        # GSI for date-based filtering and sorting
+        - IndexName: user-created-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        # GSI for name-based filtering
+        - IndexName: user-name-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: image_name
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        # GSI for duplicate detection (by hash)
+        - IndexName: user-filehash-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: file_hash
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
+      Tags:
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Service
+          Value: !Ref ServiceName
+
+  # ----------------------------------------------------------------------------
+  # API Gateway REST API
+  # ----------------------------------------------------------------------------
+  ImageApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${ServiceName}-api-${Stage}"
+      StageName: !Ref Stage
+      TracingEnabled: true
+      EndpointConfiguration:
+        Type: REGIONAL
+      ApiKeySourceType: HEADER
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          DataTraceEnabled: true
+          MetricsEnabled: true
+          ThrottlingRateLimit: !Ref RateLimitPerSecond
+          ThrottlingBurstLimit: !Ref RateLimitBurst
+      DefinitionUri:
+        Bucket: !Ref SamArtifactsBucket
+        Key: openapi/api.yaml
+      Tags:
+        Environment: !Ref Stage
+        Service: !Ref ServiceName
+
+
+  # ----------------------------------------------------------------------------
+  # API Gateway Log Group
+  # ----------------------------------------------------------------------------
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/apigateway/${ServiceName}-${Stage}"
+      RetentionInDays: 30
+
+  # ----------------------------------------------------------------------------
+  # API Key and Usage Plan
+  # ----------------------------------------------------------------------------
+  ImageStorageApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub "${ServiceName}-api-key-${Stage}"
+      Description: API Key for Image Storage API
+      Enabled: true
+
+  ImageStorageUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: !Sub "${ServiceName}-usage-plan-${Stage}"
+      Description: Usage plan with rate and burst limits
+      ApiStages:
+        - ApiId: !Ref ImageApi
+          Stage: !Ref Stage
+      Throttle:
+        RateLimit: !Ref RateLimitPerSecond
+        BurstLimit: !Ref RateLimitBurst
+      Quota:
+        Limit: !Ref RateLimitQuotaPerDay
+        Period: DAY
+
+  # Associate API Key with Usage Plan
+  ImageStorageUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ImageStorageApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref ImageStorageUsagePlan
+
+  # ----------------------------------------------------------------------------
+  # IAM Roles for Lambda Functions
+  # ----------------------------------------------------------------------------
+  UploadImageRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ServiceName}-upload-role-${Stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+        - PolicyName: UploadImagePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                Resource: !Sub "${ImageBucket.Arn}/*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:Query
+                Resource:
+                  - !GetAtt ImageMetadataTable.Arn
+                  - !Sub "${ImageMetadataTable.Arn}/index/*"
+
+  # IAM role for List Lambda - needs DynamoDB read with GSI access
+  ListImagesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ServiceName}-list-role-${Stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+        - PolicyName: ListImagesPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt ImageMetadataTable.Arn
+                  - !Sub "${ImageMetadataTable.Arn}/index/*"
+
+  # IAM role for Get Lambda - needs S3 read and DynamoDB read
+  GetImageRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ServiceName}-get-role-${Stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+        - PolicyName: GetImagePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:HeadObject
+                Resource: !Sub "${ImageBucket.Arn}/*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                Resource: !GetAtt ImageMetadataTable.Arn
+
+  # IAM role for Delete Lambda - needs S3 delete and DynamoDB delete
+  DeleteImageRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ServiceName}-delete-role-${Stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+        - PolicyName: DeleteImagePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:DeleteObject
+                  - s3:GetObject
+                Resource: !Sub "${ImageBucket.Arn}/*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:DeleteItem
+                Resource: !GetAtt ImageMetadataTable.Arn
+
+  # ----------------------------------------------------------------------------
+  # Lambda Functions
+  # ----------------------------------------------------------------------------
+  UploadImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ServiceName}-upload-image-${Stage}"
+      CodeUri: ../src/
+      Handler: handlers.upload_image.handler
+      Role: !GetAtt UploadImageRole.Arn
+      MemorySize: 1024
+      Timeout: 30
+      ReservedConcurrentExecutions: 50
+      Environment:
+        Variables:
+          IMAGE_S3_BUCKET_NAME: !Ref ImageBucket
+          IMAGE_METADATA_TABLE_NAME: !Ref ImageMetadataTable
+          USER_FILEHASH_INDEX: user-filehash-index
+
+  # Lambda: List images with filtering by name or date
+  ListImagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ServiceName}-list-images-${Stage}"
+      CodeUri: ../src/
+      Handler: handlers.list_images.handler
+      Role: !GetAtt ListImagesRole.Arn
+      MemorySize: 512
+      Timeout: 15
+      ReservedConcurrentExecutions: 100
+      Environment:
+        Variables:
+          IMAGE_METADATA_TABLE_NAME: !Ref ImageMetadataTable
+
+  # Lambda: Retrieve and download images from S3
+  GetImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ServiceName}-get-image-${Stage}"
+      CodeUri: ../src/
+      Handler: handlers.get_image.handler
+      Role: !GetAtt GetImageRole.Arn
+      MemorySize: 512
+      Timeout: 15
+      ReservedConcurrentExecutions: 100
+      Environment:
+        Variables:
+          IMAGE_S3_BUCKET_NAME: !Ref ImageBucket
+          IMAGE_METADATA_TABLE_NAME: !Ref ImageMetadataTable
+
+  # Lambda: Delete images from S3 and remove metadata
+  DeleteImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ServiceName}-delete-image-${Stage}"
+      CodeUri: ../src/
+      Handler: handlers.delete_image.handler
+      Role: !GetAtt DeleteImageRole.Arn
+      MemorySize: 256
+      Timeout: 15
+      ReservedConcurrentExecutions: 50
+      Environment:
+        Variables:
+          IMAGE_S3_BUCKET_NAME: !Ref ImageBucket
+          IMAGE_METADATA_TABLE_NAME: !Ref ImageMetadataTable
+
+  # ----------------------------------------------------------------------------
+  # Lambda Permissions for API Gateway
+  # ----------------------------------------------------------------------------
+  UploadImagePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UploadImageFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ImageApi}/*"
+
+  ListImagesPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ListImagesFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ImageApi}/*"
+
+  GetImagePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetImageFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ImageApi}/*"
+
+  DeleteImagePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DeleteImageFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ImageApi}/*"
+
+  # ----------------------------------------------------------------------------
+  # CloudWatch Log Groups
+  # ----------------------------------------------------------------------------
+  UploadImageLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ServiceName}-upload-image-${Stage}"
+      RetentionInDays: 30
+
+  ListImagesLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ServiceName}-list-images-${Stage}"
+      RetentionInDays: 30
+
+  GetImageLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ServiceName}-get-image-${Stage}"
+      RetentionInDays: 30
+
+  DeleteImageLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ServiceName}-delete-image-${Stage}"
+      RetentionInDays: 30
+
+  # ----------------------------------------------------------------------------
+  # CloudWatch Alarms
+  # ----------------------------------------------------------------------------
+  UploadImageErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ServiceName}-upload-errors-${Stage}"
+      AlarmDescription: Alert when upload function has errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UploadImageFunction
+
+  UploadImageThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ServiceName}-upload-throttles-${Stage}"
+      AlarmDescription: Alert when upload function is throttled
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UploadImageFunction
+
+  ApiGateway4XXErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ServiceName}-api-4xx-errors-${Stage}"
+      AlarmDescription: Alert on high rate of 4XX errors
+      MetricName: 4XXError
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 50
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub "${ServiceName}-api-${Stage}"
+
+  ApiGateway5XXErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ServiceName}-api-5xx-errors-${Stage}"
+      AlarmDescription: Alert on high rate of 5XX errors
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub "${ServiceName}-api-${Stage}"
+
+  DynamoDBThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ServiceName}-dynamodb-throttle-${Stage}"
+      AlarmDescription: Alert on DynamoDB throttling
+      MetricName: UserErrors
+      Namespace: AWS/DynamoDB
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: TableName
+          Value: !Ref ImageMetadataTable
+
+# ----------------------------------------------------------------------------
+# Outputs
+# ----------------------------------------------------------------------------
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ImageApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/${ApiVersion}"
+    Export:
+      Name: !Sub "${ServiceName}-api-endpoint-${Stage}"
+
+  ApiId:
+    Description: API Gateway ID
+    Value: !Ref ImageApi
+
+  ApiKeyId:
+    Description: API Key ID
+    Value: !Ref ImageStorageApiKey
+
+  GetApiKeyCommand:
+    Description: AWS CLI command to retrieve API key value from LocalStack
+    Value: !Sub "AWS_REGION=us-east-1 AWS_SECRET_ACCESS_KEY=test AWS_ACCESS_KEY_ID=test aws apigateway get-api-key --endpoint-url http://localhost:4566 --region us-east-1 --api-key ${ImageStorageApiKey} --include-value --query 'value' --output text"
+
+  UsagePlanId:
+    Description: Usage Plan ID
+    Value: !Ref ImageStorageUsagePlan
+
+  ImageBucketName:
+    Description: S3 bucket name for image storage
+    Value: !Ref ImageBucket
+
+  MetadataTableName:
+    Description: DynamoDB table name for metadata
+    Value: !Ref ImageMetadataTable
+
+  CurlTestCommand:
+    Description: Sample curl command to test the API
+    Value: !Sub |
+      # Get your API key first:
+      API_KEY=$(aws apigateway get-api-key --api-key ${ImageStorageApiKey} --include-value --query 'value' --output text)
+
+      # Test upload (replace with actual base64 image):
+      curl -X POST "https://${ImageApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/${ApiVersion}/images" \
+        -H "x-api-key: $API_KEY" \
+        -H "Content-Type: application/json" \
+        -d '{"file":"<base64-encoded-image>","user_id":"test-user","image_name":"test.jpg"}'

@@ -1,0 +1,44 @@
+services:
+  localstack:
+    # Pinned to 4.12.0 to avoid mandatory Auth Token required in 'latest' (2026)
+    image: localstack/localstack:4.12.0
+    container_name: image-storage-localstack
+    ports:
+      - "4566:4566"           # Main Edge Port
+      - "4510-4559:4510-4559" # Lambda execution ports
+    environment:
+      - DEBUG=0
+      - PERSISTENCE=1
+      - LOCALSTACK_VOLUME_DIR=/var/lib/localstack
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      # Ensures Lambda containers join the same network to talk to LocalStack
+      - LAMBDA_DOCKER_NETWORK=localstack-network
+    volumes:
+      - "./localstack-data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - localstack-network
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    container_name: image-storage-swagger
+    ports:
+      - "8080:8080"
+    environment:
+      # Static OpenAPI file
+      SWAGGER_JSON: /api.yaml
+    volumes:
+      - ./openapi/api.yaml:/api.yaml:ro
+    depends_on:
+      - localstack
+    networks:
+      - localstack-network
+
+networks:
+  localstack-network:
+    driver: bridge
