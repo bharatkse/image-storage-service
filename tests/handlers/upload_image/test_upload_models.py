@@ -1,143 +1,126 @@
-"""Unit tests for upload handler."""
+"""Unit tests for upload request validation."""
 
 import base64
 
-import pytest
-from handlers.upload_image.models import ImageUploadRequest
 from pydantic import ValidationError
+import pytest
+
+from handlers.upload_image.models import ImageUploadRequest
 
 
-def _b64(data: bytes) -> str:
-    return base64.b64encode(data).decode()
+def b64(data: bytes) -> str:
+    return base64.b64encode(data).decode("utf-8")
+
+
+def valid_payload(**overrides):
+    payload = {
+        "file": b64(b"test-image"),
+        "user_id": "john_doe",
+        "image_name": "photo.jpg",
+        "description": "Nice photo",
+        "tags": "beach,sunset",
+    }
+    payload.update(overrides)
+    return payload
 
 
 class TestUploadModels:
-    """Test upload request validation."""
+    """Upload request validation tests."""
 
-    def test_valid_upload_request(self) -> None:
-        data = {
-            "file": base64.b64encode(b"test image data").decode(),
-            "user_id": "john_doe",
-            "image_name": "photo.jpg",
-            "description": "My photo",
-            "tags": "vacation,beach",
-        }
-        request = ImageUploadRequest(**data)
-        assert request.user_id == "john_doe"
-        assert request.image_name == "photo.jpg"
-
-    def test_missing_required_field(self) -> None:
-        data = {
-            "file": base64.b64encode(b"test").decode(),
-            "user_id": "john_doe",
-            # Missing image_name
-        }
-        with pytest.raises(ValidationError):
-            ImageUploadRequest(**data)
-
-    def test_invalid_user_id_pattern(self) -> None:
-        data = {
-            "file": base64.b64encode(b"test").decode(),
-            "user_id": "user@invalid",  # Invalid characters
-            "image_name": "test.jpg",
-        }
-        with pytest.raises(ValidationError):
-            ImageUploadRequest(**data)
-
-    def test_user_id_too_short(self) -> None:
-        data = {
-            "file": base64.b64encode(b"test").decode(),
-            "user_id": "ab",  # Less than 3 chars
-            "image_name": "test.jpg",
-        }
-        with pytest.raises(ValidationError):
-            ImageUploadRequest(**data)
-
-    def test_max_tags_exceeded(self) -> None:
-        data = {
-            "file": base64.b64encode(b"test").decode(),
-            "user_id": "john_doe",
-            "image_name": "test.jpg",
-            "tags": ",".join([f"tag{i}" for i in range(11)]),  # 11 tags
-        }
-        with pytest.raises(ValidationError):
-            ImageUploadRequest(**data)
-
-    def test_invalid_base64(self) -> None:
-        data = {
-            "file": "not-valid-base64!!!",
-            "user_id": "john_doe",
-            "image_name": "test.jpg",
-        }
-        with pytest.raises(ValidationError):
-            ImageUploadRequest(**data)
-
-    def test_valid_upload_request_with_string_tags(self) -> None:
-        req = ImageUploadRequest(
-            file=_b64(b"test"),
-            user_id="john_doe",
-            image_name="photo.jpg",
-            description="desc",
-            tags="vacation, beach , sunset",
-        )
-        assert req.tags == ["vacation", "beach", "sunset"]
-
-    def test_valid_upload_request_with_list_tags(self) -> None:
-        req = ImageUploadRequest(
-            file=_b64(b"test"),
-            user_id="john_doe",
-            image_name="photo.jpg",
-            tags=[" vacation ", "beach"],
-        )
-        assert req.tags == ["vacation", "beach"]
-
-    def test_empty_tags_string(self) -> None:
-        req = ImageUploadRequest(
-            file=_b64(b"test"),
-            user_id="john_doe",
-            image_name="photo.jpg",
-            tags=" , , ",
-        )
-        assert req.tags == []
-
-    def test_tags_invalid_type(self) -> None:
-        with pytest.raises(ValidationError):
-            ImageUploadRequest(
-                file=_b64(b"test"),
-                user_id="john_doe",
-                image_name="photo.jpg",
-                tags=123,
-            )
-
-    def test_image_name_without_extension(self) -> None:
-        with pytest.raises(ValidationError):
-            ImageUploadRequest(
-                file=_b64(b"test"),
-                user_id="john_doe",
-                image_name="photo",
-            )
-
-    def test_description_too_long(self) -> None:
-        with pytest.raises(ValidationError):
-            ImageUploadRequest(
-                file=_b64(b"test"),
-                user_id="john_doe",
-                image_name="photo.jpg",
-                description="x" * 1001,
-            )
-
-    def test_file_size_exceeded(self) -> None:
-        big_data = b"a" * (51 * 1024 * 1024)  # 51MB
-        with pytest.raises(ValidationError):
-            ImageUploadRequest(
-                file=_b64(big_data),
-                user_id="john_doe",
-                image_name="photo.jpg",
-            )
+    def test_valid_request(self) -> None:
+        req = ImageUploadRequest(**valid_payload())
+        assert req.user_id == "john_doe"
+        assert req.image_name == "photo.jpg"
+        assert req.tags == ["beach", "sunset"]
 
     def test_missing_required_fields(self) -> None:
         with pytest.raises(ValidationError):
-            ImageUploadRequest(
-                file=_b64(b"test"),
-                user_id="john_doe",
-            )
+            ImageUploadRequest(user_id="john_doe")
+
+    def test_invalid_user_id_characters(self) -> None:
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(user_id="user@123"))
+
+    def test_user_id_too_short(self) -> None:
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(user_id="ab"))
+
+    def test_user_id_with_uppercase_allowed(self) -> None:
+        req = ImageUploadRequest(**valid_payload(user_id="John_Doe"))
+        assert req.user_id == "John_Doe"
+
+    def test_invalid_base64_string(self) -> None:
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(file="invalid!!"))
+
+    def test_empty_base64_string(self) -> None:
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(file=""))
+
+    def test_base64_decodes_to_empty_bytes(self) -> None:
+        empty_b64 = base64.b64encode(b"").decode()
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(file=empty_b64))
+
+    def test_file_size_exact_limit_allowed(self) -> None:
+        max_size = 50 * 1024 * 1024
+        req = ImageUploadRequest(**valid_payload(file=b64(b"a" * max_size)))
+        assert req is not None
+
+    def test_file_size_exceeded(self) -> None:
+        oversized = b"a" * (50 * 1024 * 1024 + 1)
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(file=b64(oversized)))
+
+    def test_image_name_without_extension(self) -> None:
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(image_name="photo"))
+
+    def test_image_name_with_uppercase_extension(self) -> None:
+        req = ImageUploadRequest(**valid_payload(image_name="photo.JPG"))
+        assert req.image_name.lower().endswith(".jpg")
+
+    def test_image_name_multiple_dots(self) -> None:
+        req = ImageUploadRequest(**valid_payload(image_name="my.photo.v1.png"))
+        assert req.image_name.endswith(".png")
+
+    def test_image_name_invalid_extension(self) -> None:
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(image_name="photo.exe"))
+
+    def test_tags_string_normalization(self) -> None:
+        req = ImageUploadRequest(**valid_payload(tags=" beach , sunset , "))
+        assert req.tags == ["beach", "sunset"]
+
+    def test_tags_list_normalization(self) -> None:
+        req = ImageUploadRequest(**valid_payload(tags=[" beach ", "sunset"]))
+        assert req.tags == ["beach", "sunset"]
+
+    def test_empty_tags_string(self) -> None:
+        req = ImageUploadRequest(**valid_payload(tags=" , , "))
+        assert req.tags == []
+
+    def test_duplicate_tags_removed(self) -> None:
+        req = ImageUploadRequest(**valid_payload(tags="beach,beach,sunset"))
+        assert req.tags == ["beach", "sunset"]
+
+    def test_max_tags_exceeded(self) -> None:
+        tags = ",".join(f"tag{i}" for i in range(11))
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(tags=tags))
+
+    def test_tags_invalid_type(self) -> None:
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(tags=123))
+
+    def test_description_exact_max_length(self) -> None:
+        req = ImageUploadRequest(**valid_payload(description="x" * 1000))
+        assert req.description
+
+    def test_description_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            ImageUploadRequest(**valid_payload(description="x" * 1001))
+
+    def test_description_only_spaces(self) -> None:
+        req = ImageUploadRequest(**valid_payload(description="   "))
+        assert req.description == ""

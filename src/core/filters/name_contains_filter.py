@@ -29,9 +29,7 @@ class NameContainsFilter:
             return items
 
         search_lower = search_term.lower()
-        return [
-            item for item in items if search_lower in item.get(field_name, "").lower()
-        ]
+        return [item for item in items if search_lower in item.get(field_name, "").lower()]
 
     @staticmethod
     def validate(search_term: str) -> bool:

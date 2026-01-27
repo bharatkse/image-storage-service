@@ -5,19 +5,30 @@ This module coordinates retrieval of image metadata and generation of
 secure access URLs for image viewing and downloading.
 """
 
+import os
 from typing import Any, Literal
 
 from aws_lambda_powertools import Logger
+
 from core.infrastructure.aws.dynamodb_metadata import DynamoDBMetadata
 from core.infrastructure.aws.s3_image_storage import S3ImageStorage
 from core.models.errors import (
     MetadataOperationFailedError,
     NotFoundError,
 )
+from core.utils.constants import (
+    ENV_APP_RUNTIME,
+    ERROR_CODE_METADATA_INVALID_FORMAT,
+    ERROR_CODE_METADATA_INVALID_STATE,
+    LOCALHOST_URL,
+    LOCALSTACK_URL,
+)
 
 Metadata = dict[str, Any]
 
 logger = Logger(UTC=True)
+
+IS_LOCALSTACK = os.getenv(ENV_APP_RUNTIME) == "localstack"
 
 
 class GetService:
@@ -32,6 +43,13 @@ class GetService:
     def __init__(self) -> None:
         self.storage = S3ImageStorage()
         self.metadata = DynamoDBMetadata()
+
+    def _rewrite_localstack_url(self, url: str) -> str:
+        """
+        Replace internal LocalStack hostname with localhost
+        so URLs are accessible from the host machine.
+        """
+        return url.replace(LOCALSTACK_URL, LOCALHOST_URL, 1)
 
     def generate_image_url(
         self,
@@ -70,7 +88,7 @@ class GetService:
             )
             raise MetadataOperationFailedError(
                 message="Image metadata is incomplete",
-                error_code="METADATA_INVALID_STATE",
+                error_code=ERROR_CODE_METADATA_INVALID_STATE,
                 details={"image_id": image_id},
             )
 
@@ -80,10 +98,10 @@ class GetService:
             url = self.storage.generate_presigned_get_url(
                 key=s3_key,
                 expires_in=expires_in,
-                content_disposition=(
-                    f'{disposition}; filename="{metadata.get("image_name", "image")}"'
-                ),
+                content_disposition=(f'{disposition}; filename="{metadata.get("image_name", "image")}"'),
             )
+            if IS_LOCALSTACK:
+                url = self._rewrite_localstack_url(url)
         except Exception as exc:
             logger.exception(
                 "Failed to generate pre-signed URL",
@@ -115,7 +133,7 @@ class GetService:
             )
             raise MetadataOperationFailedError(
                 message="Invalid image metadata format",
-                error_code="METADATA_INVALID_FORMAT",
+                error_code=ERROR_CODE_METADATA_INVALID_FORMAT,
                 details={"image_id": image_id},
             )
 

@@ -6,20 +6,21 @@ for image uploads while translating failures into domain-specific errors.
 
 import base64
 import hashlib
-import uuid
 from typing import Any
+import uuid
 
 from aws_lambda_powertools import Logger
+
 from core.infrastructure.aws.dynamodb_metadata import DynamoDBMetadata
 from core.infrastructure.aws.s3_image_storage import S3ImageStorage
 from core.models.errors import (
     DuplicateImageError,
-    ImageUploadFailedError,
     MetadataOperationFailedError,
+    S3Error,
     ValidationError,
 )
 from core.models.image import ImageMetadata
-from core.utils.constants import ALLOWED_MIME_TYPES
+from core.utils.constants import ALLOWED_MIME_TYPES, ERROR_CODE_METADATA_CREATE_FAILED
 from core.utils.mime import detect_mime_type
 from core.utils.time import utc_now_iso
 
@@ -101,7 +102,7 @@ class UploadService:
         Raises:
             ValidationError: If the file type is not supported
             DuplicateImageError: If the image already exists
-            ImageUploadFailedError: If storage upload fails
+            S3Error: If storage upload fails
             MetadataOperationFailedError: If metadata persistence fails
         """
         logger.debug("Starting image upload", extra={"user_id": user_id})
@@ -144,9 +145,11 @@ class UploadService:
                 file_data=file_data,
                 mime_type=mime_type,
             )
+        except S3Error:
+            raise
         except Exception as exc:
             logger.exception("Image upload to storage failed")
-            raise ImageUploadFailedError(
+            raise S3Error(
                 message="Unable to upload image",
                 details={"image_id": image_id},
             ) from exc
@@ -183,7 +186,7 @@ class UploadService:
 
             raise MetadataOperationFailedError(
                 message="Unable to save image metadata",
-                error_code="METADATA_CREATE_FAILED",
+                error_code=ERROR_CODE_METADATA_CREATE_FAILED,
                 details={"image_id": image_id},
             ) from exc
 

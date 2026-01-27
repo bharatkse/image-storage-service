@@ -1,8 +1,9 @@
 """Unit tests for get handler."""
 
-import pytest
-from handlers.get_image.models import GetImageRequest
 from pydantic import ValidationError
+import pytest
+
+from handlers.get_image.models import GetImageRequest
 
 
 class TestGetModels:

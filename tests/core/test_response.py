@@ -1,10 +1,11 @@
 import base64
-import json
 from http import HTTPStatus
+import json
 from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
+
 from core.utils.response import JsonDict, ResponseBuilder, api_handler, handle_exception
 
 
@@ -71,10 +72,7 @@ def test_default_error_messages() -> None:
     assert parse_body(ResponseBuilder.unauthorized())["message"] == "Unauthorized"
     assert parse_body(ResponseBuilder.forbidden())["message"] == "Forbidden"
     assert parse_body(ResponseBuilder.not_found())["message"] == "Resource not found"
-    assert (
-        parse_body(ResponseBuilder.internal_error())["message"]
-        == "Internal server error"
-    )
+    assert parse_body(ResponseBuilder.internal_error())["message"] == "Internal server error"
 
 
 def test_validation_error() -> None:
@@ -86,7 +84,7 @@ def test_validation_error() -> None:
     parsed = parse_body(resp)
 
     assert resp["statusCode"] == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert parsed["error"] == "VALIDATION_ERROR"
+    assert parsed["error"] == "VALIDATION_FAILED"
     assert parsed["message"] == "Invalid input"
     assert parsed["details"]["field"] == "name"
     assert parsed["request_id"] == "req-val"

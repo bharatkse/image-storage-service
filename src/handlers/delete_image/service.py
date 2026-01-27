@@ -8,12 +8,13 @@ cleanup, while translating failures into domain-specific errors.
 from typing import Any
 
 from aws_lambda_powertools import Logger
+
 from core.infrastructure.aws.dynamodb_metadata import DynamoDBMetadata
 from core.infrastructure.aws.s3_image_storage import S3ImageStorage
 from core.models.errors import (
-    ImageDeletionFailedError,
     MetadataOperationFailedError,
     NotFoundError,
+    S3Error,
 )
 from core.utils.time import utc_now_iso
 
@@ -52,7 +53,7 @@ class DeleteService:
 
         Raises:
             NotFoundError: If the image metadata does not exist
-            ImageDeletionFailedError: If storage deletion fails
+            S3Error: If storage deletion fails
             MetadataOperationFailedError: If metadata deletion fails
         """
         logger.debug("Starting image deletion", extra={"image_id": image_id})
@@ -102,7 +103,7 @@ class DeleteService:
                 "Failed to delete image from storage",
                 extra={"image_id": image_id, "s3_key": s3_key},
             )
-            raise ImageDeletionFailedError(
+            raise S3Error(
                 message="Unable to delete image from storage",
                 details={"image_id": image_id},
             ) from exc

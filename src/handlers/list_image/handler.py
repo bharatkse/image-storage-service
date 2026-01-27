@@ -6,6 +6,7 @@ from typing import Any
 
 from aws_lambda_powertools import Logger, Metrics, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
+
 from core.models.image import ImageMetadata, ListImagesResponse
 from core.models.pagination import PaginationInfo
 from core.utils.response import ResponseBuilder

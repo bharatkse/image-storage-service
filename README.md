@@ -1,8 +1,8 @@
 # Image Storage – Local Development Guide
 
-The **serverless Image Storage service** built with **AWS SAM, LocalStack, Docker, Poetry, and OpenAPI**.
+A **serverless Image Storage service** built with **AWS SAM, LocalStack, Docker, Poetry, and OpenAPI**.
 
-This repository demonstrates how to design, build, and run a **cloud-native backend locally** while keeping workflows deterministic, testable.
+This repository demonstrates how to design, build, and run a **cloud-native backend locally** while keeping workflows deterministic, testable, and close to real AWS.
 
 The **Makefile is the single entry point** for setup, development, testing, and deployment.
 
@@ -39,11 +39,17 @@ The **Makefile is the single entry point** for setup, development, testing, and 
 ├── openapi/
 │   └── api.yaml             # OpenAPI specification
 ├── src/                     # Lambda source code
+├── seed/                    # Local data seeding utilities
+│   ├── seed_images.py       # Seed data via API Gateway
+│   ├── data/
+│   │   └── images.json      # Sample image metadata
+│   └── images/              # Sample image files
 ├── scripts/
 │   └── bootstrap.sh         # Environment bootstrap
 ├── docker-compose.yml       # LocalStack + Swagger UI
 ├── Makefile                 # Primary developer interface
 └── README.md
+
 ```
 
 ---
@@ -85,60 +91,47 @@ You should see `s3`, `dynamodb`, `lambda`, and `apigateway` marked as **running*
 
 ---
 
-### 3️⃣ Get the API Key
+## 🔑 Discover API Gateway & API Key (Single Command)
+
+Retrieve **both the API Gateway ID and API Key** using one command.
 
 ```bash
-make ls-api-key
+make ls-api
 ```
 
 Example output:
 
 ```text
-Fetching API Key value...
-
-3WE9DlGXfBvS0Mozq4cKaUIQgRkF1C2Jur5dsth8
+-----------------------------------------
+|              GetRestApis              |
++------------------------+--------------+
+|  image-storage-api-snd |  nsxw5bxa8j  |
++------------------------+--------------+
++-------------------------------------------------------------------+
+|                       GetApiKey                                    |
++------------------------+------------------------------------------+
+|  image-storage-api-snd |  TwgChRfGmLc2bWNFKaiZ4M6rUlSzYJ1nO3svXQBk |
++------------------------+------------------------------------------+
 ```
 
-Copy the generated API Key **3WE9DlGXfBvS0Mozq4cKaUIQgRkF1C2Jur5dsth8**.
+### What to copy
 
----
+* **API Gateway ID** → `nsxw5bxa8j`
+* **API Key** → `TwgChRfGmLc2bWNFKaiZ4M6rUlSzYJ1nO3svXQBk`
 
-### 4️⃣ Discover the API Gateway ID
-
-```bash
-make ls-apigateway
-```
-
-Example output:
+### API base URL
 
 ```text
-| name                  | id        |
-|-----------------------|-----------|
-| image-storage-api-snd | 0cwk3gsxsm |
+http://localhost:4566/restapis/<API_ID>/snd/_user_request_/v1
 ```
-
-Copy the **API ID** (example: `0cwk3gsxsm`).
 
 ---
 
-### 5️⃣ Troubleshooting Errors
+## 🔌 Test the APIs (End-to-End)
 
-Check logs:
+The following examples demonstrate the **complete lifecycle** of an image:
 
-```bash
-make docker-logs
-```
-
-Redeploy if needed:
-
-```bash
-make cf-deploy
-```
----
-
-## 🔌 Test the APIs (End‑to‑End)
-The following examples demonstrate a **complete lifecycle** of an image:
-**upload → list → download → delete**.
+**upload → list → download → delete**
 
 ---
 
@@ -239,6 +232,67 @@ curl -X DELETE \
 **Expected result**
 - HTTP **200 OK**
 - Confirmation message indicating successful deletion
+
+---
+### 5️⃣ Troubleshooting Errors
+
+Check logs:
+
+```bash
+make docker-logs
+```
+
+Restart Hard if needed:
+
+```bash
+make restart-hard
+```
+
+---
+## 🌱 Seed Sample Data (Via API)
+Seeding uses **real API Gateway endpoints**, not Lambda shortcuts.
+
+```curl
+poetry run python seed/seed_images.py \
+  --api-id <API_ID> \
+  --api-key <API_KEY>
+
+```
+This validates the **entire request path:**
+
+**API Gateway → Lambda → S3 → DynamoDB**
+
+---
+## 🔍 Inspect LocalStack Resources
+### 📦 DynamoDB
+| Command              | Description                  |
+| -------------------- | ---------------------------- |
+| `make ls-dynamodb`   | List DynamoDB tables         |
+| `make scan-dynamodb` | Scan and display table items |
+
+```bash
+make scan-dynamodb
+```
+OR
+```bash
+make scan-dynamodb DYNAMODB_TABLE=my-table-name
+```
+
+### 🪣 S3 (Uploaded Files)
+| Command              | Description              |
+| -------------------- | ------------------------ |
+| `make ls-s3`         | List S3 buckets          |
+| `make ls-s3-objects` | List uploaded S3 objects |
+
+```bash
+make ls-s3-objects
+```
+OR
+```bash
+make ls-s3-objects S3_BUCKET=my-bucket-name
+```
+
+This confirms that **actual image files were uploaded.**
 
 
 ⬇️ **Everything below this point explains the tools and workflows in detail.**

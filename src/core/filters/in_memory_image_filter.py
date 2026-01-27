@@ -9,6 +9,7 @@ not perform data access and is intended to operate on pre-fetched items.
 from typing import Any
 
 from aws_lambda_powertools import Logger
+
 from core.filters.name_contains_filter import NameContainsFilter
 from core.filters.offset_pagination import OffsetPagination
 
@@ -89,7 +90,5 @@ class InMemoryImageFilter:
             )
             raise ValueError(error_message)
 
-        paginated_items, total_count, has_more = self._pagination.paginate(
-            items, offset, limit
-        )
+        paginated_items, total_count, has_more = self._pagination.paginate(items, offset, limit)
         return paginated_items, total_count, has_more

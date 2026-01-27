@@ -2,10 +2,11 @@ import base64
 from unittest.mock import patch
 
 import pytest
+
 from core.models.errors import (
     DuplicateImageError,
-    ImageUploadFailedError,
     MetadataOperationFailedError,
+    S3Error,
     ValidationError,
 )
 from handlers.upload_image.service import UploadService
@@ -40,9 +41,7 @@ class TestUploadService:
 
         with (
             patch.object(service.metadata, "check_duplicate_image", return_value=False),
-            patch.object(
-                service.storage, "upload_image", return_value="images/u/img.png"
-            ),
+            patch.object(service.storage, "upload_image", return_value="images/u/img.png"),
             patch.object(service.metadata, "create_metadata"),
         ):
             result = service.upload_image(
@@ -114,7 +113,7 @@ class TestUploadService:
                 side_effect=Exception("S3 down"),
             ),
         ):
-            with pytest.raises(ImageUploadFailedError):
+            with pytest.raises(S3Error):
                 service.upload_image(
                     user_id="user_1",
                     image_name="photo.png",
@@ -127,9 +126,7 @@ class TestUploadService:
 
         with (
             patch.object(service.metadata, "check_duplicate_image", return_value=False),
-            patch.object(
-                service.storage, "upload_image", return_value="images/u/img.png"
-            ),
+            patch.object(service.storage, "upload_image", return_value="images/u/img.png"),
             patch.object(
                 service.metadata,
                 "create_metadata",
@@ -152,9 +149,7 @@ class TestUploadService:
 
         with (
             patch.object(service.metadata, "check_duplicate_image", return_value=False),
-            patch.object(
-                service.storage, "upload_image", return_value="images/u/img.png"
-            ),
+            patch.object(service.storage, "upload_image", return_value="images/u/img.png"),
             patch.object(
                 service.metadata,
                 "create_metadata",

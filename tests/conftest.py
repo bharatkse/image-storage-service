@@ -1,16 +1,16 @@
 """
-Pytest configuration and fixtures for image-stream tests.
+Pytest configuration and fixtures for image-storage tests.
 Provides AWS mocking, DynamoDB and S3 fixtures with proper cleanup.
 """
 
-import os
 from collections.abc import Callable
+import os
 from typing import Any
 
 import boto3
-import pytest
 from botocore.exceptions import ClientError
 from moto import mock_aws
+import pytest
 
 
 @pytest.fixture(scope="function")
@@ -204,9 +204,7 @@ def _cleanup_s3_objects(s3_client, bucket_name):
             objects = page.get("Contents", [])
             if objects:
                 delete_keys = [{"Key": obj["Key"]} for obj in objects]
-                s3_client.delete_objects(
-                    Bucket=bucket_name, Delete={"Objects": delete_keys}
-                )
+                s3_client.delete_objects(Bucket=bucket_name, Delete={"Objects": delete_keys})
     except ClientError as e:
         if e.response["Error"]["Code"] != "NoSuchBucket":
             raise
@@ -248,9 +246,7 @@ def s3_put_object(s3_client) -> Callable[[str, bytes, str], dict[str, Any]]:
 
     def _put(key: str, body: bytes, content_type: str = "application/octet-stream"):
         bucket_name = os.getenv("IMAGE_S3_BUCKET_NAME")
-        return s3_client.put_object(
-            Bucket=bucket_name, Key=key, Body=body, ContentType=content_type
-        )
+        return s3_client.put_object(Bucket=bucket_name, Key=key, Body=body, ContentType=content_type)
 
     return _put
 
@@ -359,9 +355,7 @@ def dynamodb_with_multiple_items(
     multiple_image_metadata_items,
 ) -> list[dict[str, Any]]:
     """DynamoDB table pre-populated with multiple items."""
-    items: list[dict[str, Any]] = dynamodb_put_multiple_items(
-        multiple_image_metadata_items
-    )
+    items: list[dict[str, Any]] = dynamodb_put_multiple_items(multiple_image_metadata_items)
     return items
 
 

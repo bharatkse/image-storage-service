@@ -1,14 +1,10 @@
----
-
 openapi: 3.0.1
-
 info:
   title: Image Storage API
   version: "1.0.0"
   description: >
-    Image storage service providing upload, listing, retrieval,
-    and deletion of images using AWS API Gateway, Lambda, S3,
-    and DynamoDB.
+    Image storage service providing upload, listing, retrieval, and deletion
+    of images using AWS API Gateway, Lambda, S3, and DynamoDB.
   contact:
     name: API Support
     email: bkumar28@gmail.com
@@ -18,8 +14,11 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: http://localhost:4566/restapis/{api_id}/{stage}/_user_request_
-    description: LocalStack API Gateway (REST API)
+  # --------------------
+  # Local development (host machine)
+  # --------------------
+  - url: http://localhost:4566/_aws/execute-api/{api_id}/{stage}
+    description: LocalStack API Gateway (host access)
     variables:
       api_id:
         default: xxxxxxxxxx
@@ -28,6 +27,9 @@ servers:
         default: snd
         description: Environment stage (snd, dev, uat, prod)
 
+  # --------------------
+  # AWS (real cloud)
+  # --------------------
   - url: https://{api_id}.execute-api.{region}.amazonaws.com/{stage}
     description: AWS API Gateway
     variables:
@@ -45,6 +47,30 @@ tags:
   - name: Images
     description: Image storage and management operations
 
+x-amazon-apigateway-binary-media-types:
+  - image/jpeg
+  - image/png
+  - image/gif
+  - image/webp
+  - image/svg+xml
+  - application/octet-stream
+
+x-amazon-apigateway-cors:
+  allowOrigins:
+    - "*"
+  allowMethods:
+    - GET
+    - POST
+    - DELETE
+    - OPTIONS
+  allowHeaders:
+    - Content-Type
+    - X-Amz-Date
+    - Authorization
+    - X-Api-Key
+    - X-Amz-Security-Token
+  maxAge: 3600
+
 paths:
   /v1/images:
     post:
@@ -55,7 +81,6 @@ paths:
         - Images
       security:
         - ApiKeyAuth: []
-
       requestBody:
         required: true
         content:
@@ -70,14 +95,12 @@ paths:
                   description: "Summer vacation at the beach"
                   tags: ["vacation", "beach"]
                   file: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ..."
-
+      x-amazon-apigateway-request-validator: params-only
       x-amazon-apigateway-integration:
         type: aws_proxy
         httpMethod: POST
-        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:image-storage-upload-image-snd/invocations"
-        responses:
-          default:
-            statusCode: "200"
+        # yamllint disable-line rule:line-length
+        uri: arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:image-storage-upload-image-snd/invocations
       responses:
         "201":
           description: Image uploaded successfully
@@ -102,24 +125,9 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
         "409":
-          description: Duplicate image detected
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                error: "DuplicateImageError"
-                message: "This image already exists (file hash match)"
-                timestamp: "2024-01-15T10:30:00Z"
-                existing_image_id: "img_previous123"
+          $ref: "#/components/responses/InternalServerError"
         "413":
           $ref: "#/components/responses/PayloadTooLarge"
-        "415":
-          description: Unsupported media type
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         "500":
@@ -129,8 +137,8 @@ paths:
       summary: List stored images
       description: >
         Supports:
-        - Name substring filter (in-memory)
-        - Date range filter (DynamoDB-level)
+        - Name substring filter
+        - Date range filter
       operationId: listImages
       tags:
         - Images
@@ -151,7 +159,8 @@ paths:
         - name: name_contains
           in: query
           required: false
-          description: Filter images by name substring (case-insensitive)
+          description: >-
+            Filter images by name substring (case-insensitive)
           schema:
             type: string
             minLength: 1
@@ -161,7 +170,9 @@ paths:
         - name: start_date
           in: query
           required: false
-          description: Filter images created on or after this date (ISO 8601 format YYYY-MM-DD)
+          description: >-
+            Filter images created on or after this date
+            (ISO 8601 format YYYY-MM-DD)
           schema:
             type: string
             format: date
@@ -170,7 +181,9 @@ paths:
         - name: end_date
           in: query
           required: false
-          description: Filter images created on or before this date (ISO 8601 format YYYY-MM-DD)
+          description: >-
+            Filter images created on or before this date
+            (ISO 8601 format YYYY-MM-DD)
           schema:
             type: string
             format: date
@@ -224,7 +237,8 @@ paths:
       x-amazon-apigateway-request-validator: params-only
       x-amazon-apigateway-integration:
         type: aws_proxy
-        httpMethod: POST
+        httpMethod: GET
+        # yamllint disable-line rule:line-length
         uri: arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:image-storage-list-images-snd/invocations
       responses:
         "200":
@@ -279,10 +293,39 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+    options:
+      summary: CORS support
+      responses:
+        "200":
+          description: Default CORS response
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Api-Key,Authorization'"
+
   /v1/images/{image_id}:
     get:
-      summary: Retrieve a stored image
-      description: Download image binary from S3.
+      summary: Get image access URL
+      description: >
+        Generates a short-lived S3 pre-signed URL to view or download
+        the image. The client downloads the image directly from S3.
       operationId: getImage
       tags:
         - Images
@@ -299,10 +342,19 @@ paths:
             pattern: "^img_[a-zA-Z0-9]+$"
           example: "img_a1b2c3d4e5f6"
 
+        - name: download
+          in: query
+          required: false
+          description: Force file download instead of inline preview
+          schema:
+            type: boolean
+            default: false
+          example: true
+
         - name: metadata
           in: query
           required: false
-          description: Include metadata in response header (X-Image-Metadata)
+          description: Include base64-encoded image metadata in response
           schema:
             type: boolean
             default: false
@@ -311,43 +363,41 @@ paths:
       x-amazon-apigateway-request-validator: params-only
       x-amazon-apigateway-integration:
         type: aws_proxy
-        httpMethod: POST
+        httpMethod: GET
+        # yamllint disable-line rule:line-length
         uri: arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:image-storage-get-image-snd/invocations
       responses:
         "200":
-          description: Image retrieved successfully
-          headers:
-            Content-Type:
-              description: Image MIME type
-              schema:
-                type: string
-              example: "image/jpeg"
-            Content-Length:
-              description: File size in bytes
-              schema:
-                type: integer
-              example: 245678
-            X-Image-Metadata:
-              description: Image metadata JSON (when metadata=true)
-              schema:
-                $ref: "#/components/schemas/ImageMetadataHeader"
+          description: Pre-signed URL generated successfully
           content:
-            image/jpeg:
+            application/json:
               schema:
-                type: string
-                format: binary
-            image/png:
-              schema:
-                type: string
-                format: binary
-            image/gif:
-              schema:
-                type: string
-                format: binary
-            image/webp:
-              schema:
-                type: string
-                format: binary
+                type: object
+                required:
+                  - image_id
+                  - presigned_url
+                  - mime_type
+                  - content_disposition
+                properties:
+                  image_id:
+                    type: string
+                    example: "img_a1b2c3d4e5f6"
+                  presigned_url:
+                    type: string
+                    format: uri
+                    description: Temporary S3 URL for accessing the image
+                    example: >-
+                      https://bucket.s3.amazonaws.com/...?X-Amz-Signature=...
+                  content_disposition:
+                    type: string
+                    description: How the file will be handled by the browser
+                    example: "attachment; filename=\"vacation-photo.jpg\""
+                  mime_type:
+                    type: string
+                    example: "image/jpeg"
+                  metadata:
+                    $ref: "#/components/schemas/ImageMetadata"
+                    nullable: true
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -381,7 +431,8 @@ paths:
       x-amazon-apigateway-request-validator: params-only
       x-amazon-apigateway-integration:
         type: aws_proxy
-        httpMethod: POST
+        httpMethod: DELETE
+        # yamllint disable-line rule:line-length
         uri: arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:image-storage-delete-image-snd/invocations
       responses:
         "200":
@@ -406,6 +457,33 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+    options:
+      summary: CORS support
+      responses:
+        "200":
+          description: Default CORS response
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,DELETE,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Api-Key,Authorization'"
+
 x-amazon-apigateway-request-validators:
   all:
     validateRequestBody: true
@@ -421,7 +499,8 @@ components:
       in: header
       name: x-api-key
       description: |
-        API key for authentication. Include in all requests via the `x-api-key` header.
+        API key for authentication. Include in all requests via
+        the `x-api-key` header.
 
   schemas:
     ImageMetadataHeader:
@@ -430,7 +509,10 @@ components:
         Base64-encoded JSON string containing image metadata.
         Returned only when `metadata=true` query parameter is used.
       example: >
-        eyJpbWFnZV9pZCI6ICJpbWdfYTFiMmMzZDRlNWY2IiwgInVzZXJfaWQiOiAidXNlcjEyMyIsICJpbWFnZV9uYW1lIjogInZhY2F0aW9uLXBob3RvLmpwZyIsICJjcmVhdGVkX2F0IjogIjIwMjQtMDEtMTVUMTA6MzA6MDBaIiwgIm1pbWVfdHlwZSI6ICJpbWFnZS9qcGVnIn0=
+        eyJpbWFnZV9pZCI6ICJpbWdfYTFiMmMzZDRlNWY2IiwgInVzZXJfaWQiOiAidXNl
+        cjEyMyIsICJpbWFnZV9uYW1lIjogInZhY2F0aW9uLXBob3RvLmpwZyIsICJjcmVh
+        dGVkX2F0IjogIjIwMjQtMDEtMTVUMTA6MzA6MDBaIiwgIm1pbWVfdHlwZSI6ICJp
+        bWFnZS9qcGVnIn0=
 
     ImageUploadRequest:
       type: object
@@ -443,7 +525,9 @@ components:
           type: string
           description: Base64 encoded image file
           format: byte
-          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+          example: >-
+            iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42
+            mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==
         user_id:
           type: string
           description: User identifier (alphanumeric, hyphens, underscores)
@@ -609,7 +693,8 @@ components:
           type: string
           nullable: true
           description: Description of applied filters
-          example: "name_contains: vacation, date_range: 2024-01-01 to 2024-01-31"
+          example: >-
+            name_contains: vacation, date_range: 2024-01-01 to 2024-01-31
         pagination:
           type: object
           required:
@@ -668,7 +753,8 @@ components:
         message:
           type: string
           description: Human-readable error message
-          example: "Invalid image format. Supported formats: JPEG, PNG, GIF, WebP"
+          example: >-
+            Invalid image format. Supported formats: JPEG, PNG, GIF, WebP
         timestamp:
           type: string
           format: date-time
@@ -700,7 +786,8 @@ components:
             invalidFormat:
               value:
                 error: "InvalidImageFormat"
-                message: "Unsupported image format. Supported: JPEG, PNG, GIF, WebP"
+                message: >-
+                  Unsupported image format. Supported: JPEG, PNG, GIF, WebP
                 timestamp: "2024-01-15T10:30:00Z"
 
     Unauthorized:

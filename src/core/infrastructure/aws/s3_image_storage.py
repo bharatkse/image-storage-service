@@ -5,17 +5,20 @@ from typing import Any
 
 from aws_lambda_powertools import Logger
 from botocore.exceptions import ClientError
+
 from core.infrastructure.adapters.s3_adapter import S3Adapter
 from core.models.errors import (
-    ImageDeletionFailedError,
-    ImageDownloadFailedError,
-    ImageUploadFailedError,
-    MetadataOperationFailedError,
     NotFoundError,
+    S3Error,
 )
-from core.utils.constants import MIME_TYPE_EXTENSION_MAP
-
-from src.core.repositories.storage_repository import ImageStorageRepository
+from core.repositories.storage_repository import ImageStorageRepository
+from core.utils.constants import (
+    ERROR_CODE_IMAGE_DELETE_FAILED,
+    ERROR_CODE_IMAGE_DOWNLOAD_FAILED,
+    ERROR_CODE_IMAGE_PRESIGNED_URL_FAILED,
+    ERROR_CODE_IMAGE_UPLOAD_FAILED,
+    MIME_TYPE_EXTENSION_MAP,
+)
 
 logger = Logger(UTC=True)
 
@@ -64,17 +67,17 @@ class S3ImageStorage(ImageStorageRepository):
 
         except ClientError as exc:
             logger.error("S3 upload failed", extra={"key": key})
-            raise ImageUploadFailedError(
+            raise S3Error(
                 message="Unable to upload image at this time",
-                error_code="IMAGE_UPLOAD_FAILED",
+                error_code=ERROR_CODE_IMAGE_UPLOAD_FAILED,
                 details={"image_id": image_id},
             ) from exc
 
         except Exception as exc:
             logger.exception("Unexpected error uploading image")
-            raise ImageUploadFailedError(
+            raise S3Error(
                 message="Unable to upload image at this time",
-                error_code="IMAGE_UPLOAD_FAILED",
+                error_code=ERROR_CODE_IMAGE_UPLOAD_FAILED,
                 details={"image_id": image_id},
             ) from exc
 
@@ -112,17 +115,17 @@ class S3ImageStorage(ImageStorageRepository):
                 ) from exc
 
             logger.error("Failed to generate pre-signed URL", extra={"key": key})
-            raise MetadataOperationFailedError(
+            raise S3Error(
                 message="Unable to generate image access URL",
-                error_code="PRESIGNED_URL_FAILED",
+                error_code=ERROR_CODE_IMAGE_PRESIGNED_URL_FAILED,
                 details={"key": key},
             ) from exc
 
         except Exception as exc:
             logger.exception("Unexpected error generating pre-signed URL")
-            raise MetadataOperationFailedError(
+            raise S3Error(
                 message="Unable to generate image access URL",
-                error_code="PRESIGNED_URL_FAILED",
+                error_code=ERROR_CODE_IMAGE_PRESIGNED_URL_FAILED,
                 details={"key": key},
             ) from exc
 
@@ -152,17 +155,17 @@ class S3ImageStorage(ImageStorageRepository):
                     details={"key": key},
                 ) from exc
 
-            raise ImageDownloadFailedError(
+            raise S3Error(
                 message="Unable to download image at this time",
-                error_code="IMAGE_DOWNLOAD_FAILED",
+                error_code=ERROR_CODE_IMAGE_DOWNLOAD_FAILED,
                 details={"key": key},
             ) from exc
 
         except Exception as exc:
             logger.exception("Unexpected error downloading image")
-            raise ImageDownloadFailedError(
+            raise S3Error(
                 message="Unable to download image at this time",
-                error_code="IMAGE_DOWNLOAD_FAILED",
+                error_code=ERROR_CODE_IMAGE_DOWNLOAD_FAILED,
                 details={"key": key},
             ) from exc
 
@@ -176,17 +179,17 @@ class S3ImageStorage(ImageStorageRepository):
 
         except ClientError as exc:
             logger.error("S3 deletion failed", extra={"key": key})
-            raise ImageDeletionFailedError(
+            raise S3Error(
                 message="Unable to delete image at this time",
-                error_code="IMAGE_DELETION_FAILED",
+                error_code=ERROR_CODE_IMAGE_DELETE_FAILED,
                 details={"key": key},
             ) from exc
 
         except Exception as exc:
             logger.exception("Unexpected error deleting image")
-            raise ImageDeletionFailedError(
+            raise S3Error(
                 message="Unable to delete image at this time",
-                error_code="IMAGE_DELETION_FAILED",
+                error_code=ERROR_CODE_IMAGE_DELETE_FAILED,
                 details={"key": key},
             ) from exc
 

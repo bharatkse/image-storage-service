@@ -2,8 +2,9 @@
 
 from typing import Any, TypeVar
 
-from core.utils.response import ResponseBuilder
 from pydantic import BaseModel, ValidationError
+
+from core.utils.response import ResponseBuilder
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 

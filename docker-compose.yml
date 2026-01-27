@@ -3,42 +3,101 @@ services:
     # Pinned to 4.12.0 to avoid mandatory Auth Token required in 'latest' (2026)
     image: localstack/localstack:4.12.0
     container_name: image-storage-localstack
+
     ports:
-      - "4566:4566"           # Main Edge Port
+      - "4566:4566"           # LocalStack edge port
       - "4510-4559:4510-4559" # Lambda execution ports
+
     environment:
-      - DEBUG=0
-      - PERSISTENCE=1
-      - LOCALSTACK_VOLUME_DIR=/var/lib/localstack
-      - DOCKER_HOST=unix:///var/run/docker.sock
-      # Ensures Lambda containers join the same network to talk to LocalStack
-      - LAMBDA_DOCKER_NETWORK=localstack-network
+      # --------------------
+      # Core LocalStack
+      # --------------------
+      DEBUG: "0"
+      PERSISTENCE: "1"
+      LOCALSTACK_VOLUME_DIR: /var/lib/localstack
+      DOCKER_HOST: unix:///var/run/docker.sock
+
+      # --------------------
+      # Lambda execution
+      # --------------------
+      LAMBDA_EXECUTOR: docker
+      LAMBDA_DOCKER_NETWORK: image-storage-localstack_default
+      LAMBDA_TIMEOUT: "300"
+      LAMBDA_SKIP_PULL_IMAGE: "1"
+      LAMBDA_MAX_CONCURRENCY: "10"
+
+      # --------------------
+      # AWS SDK visibility (CRITICAL)
+      # Visible to Lambda containers
+      # --------------------
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
+
+      # --------------------
+      # Enabled services
+      # --------------------
+      SERVICES: apigateway,s3,dynamodb,lambda,cloudformation,logs,iam,sts,cloudwatch
+
+      # --------------------
+      # Misc / stability
+      # --------------------
+      AWS_SUPPRESS_XDG_RUNTIME_DIR: "true"
+      PYTHONUNBUFFERED: "1"
+      ENFORCE_IAM_POLICIES: "false"
+
     volumes:
-      - "./localstack-data:/var/lib/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock:z
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 30s
+
     networks:
       - localstack-network
+    # Resource limits to prevent starvation
+    deploy:
+      resources:
+        limits:
+          cpus: '2.5'
+          memory: 2.5G
+        reservations:
+          cpus: '1.5'
+          memory: 1.5G
+    # Restart policy for resilience
+    restart: unless-stopped
+
 
   swagger-ui:
     image: swaggerapi/swagger-ui:latest
     container_name: image-storage-swagger
+
     ports:
       - "8080:8080"
+
     environment:
-      # Static OpenAPI file
+      # Enable editor (optional)
+      SWAGGER_JSON_EDITOR: "true"
       SWAGGER_JSON: /api.yaml
+
     volumes:
       - ./openapi/api.yaml:/api.yaml:ro
+
     depends_on:
-      - localstack
+      localstack:
+        condition: service_healthy
+
     networks:
       - localstack-network
+
+    restart: unless-stopped
+
 
 networks:
   localstack-network:
     driver: bridge
+    name: image-storage-localstack_default

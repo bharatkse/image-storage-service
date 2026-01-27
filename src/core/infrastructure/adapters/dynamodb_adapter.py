@@ -4,6 +4,7 @@ import os
 from typing import Any, Protocol, cast
 
 import boto3
+
 from core.utils.constants import (
     ENV_AWS_ENDPOINT_URL,
     ENV_AWS_REGION,
@@ -33,9 +34,7 @@ class DynamoDBAdapter:
         """Initialize DynamoDB table from environment."""
         table_name = os.getenv(ENV_IMAGE_METADATA_TABLE_NAME)
         if not table_name:
-            raise RuntimeError(
-                f"{ENV_IMAGE_METADATA_TABLE_NAME} environment variable is not set"
-            )
+            raise RuntimeError(f"{ENV_IMAGE_METADATA_TABLE_NAME} environment variable is not set")
 
         dynamodb = boto3.resource(
             "dynamodb",

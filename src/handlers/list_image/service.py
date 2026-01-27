@@ -5,6 +5,7 @@ Business logic for image listing and filtering.
 from typing import Any
 
 from aws_lambda_powertools import Logger
+
 from core.filters.in_memory_image_filter import InMemoryImageFilter
 from core.infrastructure.aws.dynamodb_metadata import DynamoDBMetadata
 from core.models.errors import FilterError, MetadataOperationFailedError

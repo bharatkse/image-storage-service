@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 
-Description: Image storage - Production-ready serverless template with monitoring and security
+Description: Image storage - Serverless template for LocalStack
 
 Parameters:
   Stage:
@@ -56,7 +56,10 @@ Globals:
         POWERTOOLS_LOGGER_SAMPLE_RATE: 0.1
         POWERTOOLS_LOGGER_LOG_EVENT: true
         ENVIRONMENT: !Ref Stage
-        AWS_ENDPOINT_URL: http://localhost:4566
+        PYTHONUNBUFFERED: '1'
+        # LocalStack-specific endpoint override
+        AWS_ENDPOINT_URL: http://localstack:4566
+        APP_RUNTIME: localstack
 
 Resources:
   # ----------------------------------------------------------------------------
@@ -77,16 +80,6 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
-      LifecycleConfiguration:
-        Rules:
-          - Id: DeleteOldVersions
-            Status: Enabled
-            NoncurrentVersionExpirationInDays: 30
-          - Id: TransitionToIA
-            Status: Enabled
-            Transitions:
-              - TransitionInDays: 90
-                StorageClass: STANDARD_IA
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
@@ -121,8 +114,6 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
       AttributeDefinitions:
         - AttributeName: image_id
           AttributeType: S
@@ -156,7 +147,7 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-        # GSI for duplicate detection (by hash)
+        # GSI for duplicate detection
         - IndexName: user-filehash-index
           KeySchema:
             - AttributeName: user_id
@@ -233,7 +224,6 @@ Resources:
         Limit: !Ref RateLimitQuotaPerDay
         Period: DAY
 
-  # Associate API Key with Usage Plan
   ImageStorageUsagePlanKey:
     Type: AWS::ApiGateway::UsagePlanKey
     Properties:
@@ -276,7 +266,6 @@ Resources:
                   - !GetAtt ImageMetadataTable.Arn
                   - !Sub "${ImageMetadataTable.Arn}/index/*"
 
-  # IAM role for List Lambda - needs DynamoDB read with GSI access
   ListImagesRole:
     Type: AWS::IAM::Role
     Properties:
@@ -304,7 +293,6 @@ Resources:
                   - !GetAtt ImageMetadataTable.Arn
                   - !Sub "${ImageMetadataTable.Arn}/index/*"
 
-  # IAM role for Get Lambda - needs S3 read and DynamoDB read
   GetImageRole:
     Type: AWS::IAM::Role
     Properties:
@@ -334,7 +322,6 @@ Resources:
                   - dynamodb:GetItem
                 Resource: !GetAtt ImageMetadataTable.Arn
 
-  # IAM role for Delete Lambda - needs S3 delete and DynamoDB delete
   DeleteImageRole:
     Type: AWS::IAM::Role
     Properties:
@@ -373,24 +360,21 @@ Resources:
     Properties:
       FunctionName: !Sub "${ServiceName}-upload-image-${Stage}"
       CodeUri: ../src/
-      Handler: handlers.upload_image.handler
+      Handler: handlers.upload_image.handler.handler
       Role: !GetAtt UploadImageRole.Arn
       MemorySize: 1024
-      Timeout: 30
       ReservedConcurrentExecutions: 50
       Environment:
         Variables:
           IMAGE_S3_BUCKET_NAME: !Ref ImageBucket
           IMAGE_METADATA_TABLE_NAME: !Ref ImageMetadataTable
-          USER_FILEHASH_INDEX: user-filehash-index
 
-  # Lambda: List images with filtering by name or date
   ListImagesFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${ServiceName}-list-images-${Stage}"
       CodeUri: ../src/
-      Handler: handlers.list_images.handler
+      Handler: handlers.list_image.handler.handler
       Role: !GetAtt ListImagesRole.Arn
       MemorySize: 512
       Timeout: 15
@@ -399,13 +383,12 @@ Resources:
         Variables:
           IMAGE_METADATA_TABLE_NAME: !Ref ImageMetadataTable
 
-  # Lambda: Retrieve and download images from S3
   GetImageFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${ServiceName}-get-image-${Stage}"
       CodeUri: ../src/
-      Handler: handlers.get_image.handler
+      Handler: handlers.get_image.handler.handler
       Role: !GetAtt GetImageRole.Arn
       MemorySize: 512
       Timeout: 15
@@ -415,13 +398,12 @@ Resources:
           IMAGE_S3_BUCKET_NAME: !Ref ImageBucket
           IMAGE_METADATA_TABLE_NAME: !Ref ImageMetadataTable
 
-  # Lambda: Delete images from S3 and remove metadata
   DeleteImageFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${ServiceName}-delete-image-${Stage}"
       CodeUri: ../src/
-      Handler: handlers.delete_image.handler
+      Handler: handlers.delete_image.handler.handler
       Role: !GetAtt DeleteImageRole.Arn
       MemorySize: 256
       Timeout: 15
@@ -585,11 +567,13 @@ Resources:
 # Outputs
 # ----------------------------------------------------------------------------
 Outputs:
-  ApiEndpoint:
-    Description: API Gateway endpoint URL
-    Value: !Sub "https://${ImageApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/${ApiVersion}"
-    Export:
-      Name: !Sub "${ServiceName}-api-endpoint-${Stage}"
+  ImageBucketName:
+    Description: S3 bucket name for image storage
+    Value: !Ref ImageBucket
+
+  MetadataTableName:
+    Description: DynamoDB table name for metadata
+    Value: !Ref ImageMetadataTable
 
   ApiId:
     Description: API Gateway ID
@@ -599,30 +583,12 @@ Outputs:
     Description: API Key ID
     Value: !Ref ImageStorageApiKey
 
-  GetApiKeyCommand:
+  ApiGatewayEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ImageApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/${ApiVersion}"
+    Export:
+      Name: !Sub "${ServiceName}-api-endpoint-${Stage}"
+
+  GetApiKeyLocalCommand:
     Description: AWS CLI command to retrieve API key value from LocalStack
     Value: !Sub "AWS_REGION=us-east-1 AWS_SECRET_ACCESS_KEY=test AWS_ACCESS_KEY_ID=test aws apigateway get-api-key --endpoint-url http://localhost:4566 --region us-east-1 --api-key ${ImageStorageApiKey} --include-value --query 'value' --output text"
-
-  UsagePlanId:
-    Description: Usage Plan ID
-    Value: !Ref ImageStorageUsagePlan
-
-  ImageBucketName:
-    Description: S3 bucket name for image storage
-    Value: !Ref ImageBucket
-
-  MetadataTableName:
-    Description: DynamoDB table name for metadata
-    Value: !Ref ImageMetadataTable
-
-  CurlTestCommand:
-    Description: Sample curl command to test the API
-    Value: !Sub |
-      # Get your API key first:
-      API_KEY=$(aws apigateway get-api-key --api-key ${ImageStorageApiKey} --include-value --query 'value' --output text)
-
-      # Test upload (replace with actual base64 image):
-      curl -X POST "https://${ImageApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/${ApiVersion}/images" \
-        -H "x-api-key: $API_KEY" \
-        -H "Content-Type: application/json" \
-        -d '{"file":"<base64-encoded-image>","user_id":"test-user","image_name":"test.jpg"}'
