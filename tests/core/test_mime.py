@@ -1,4 +1,5 @@
 import pytest
+
 from core.utils.mime import detect_mime_type
 
 

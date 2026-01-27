@@ -5,6 +5,7 @@ from typing import Any, cast
 
 import boto3
 from botocore.client import BaseClient
+
 from core.utils.constants import (
     ENV_AWS_ENDPOINT_URL,
     ENV_AWS_REGION,

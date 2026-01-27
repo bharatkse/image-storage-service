@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 from botocore.exceptions import ClientError
+
 from core.infrastructure.aws.dynamodb_metadata import DynamoDBMetadata
 from core.models.errors import (
     DuplicateImageError,

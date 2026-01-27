@@ -5,6 +5,7 @@ from typing import Any
 from aws_lambda_powertools import Logger
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
+
 from core.infrastructure.adapters.dynamodb_adapter import DynamoDBAdapter
 from core.models.errors import (
     DuplicateImageError,
@@ -12,6 +13,14 @@ from core.models.errors import (
     MetadataOperationFailedError,
 )
 from core.repositories.metadata_repository import ImageMetadataRepository
+from core.utils.constants import (
+    ERROR_CODE_METADATA_CREATE_FAILED,
+    ERROR_CODE_METADATA_DELETE_FAILED,
+    ERROR_CODE_METADATA_DUPLICATE_CHECK_FAILED,
+    ERROR_CODE_METADATA_FETCH_FAILED,
+    ERROR_CODE_METADATA_LIST_FAILED,
+    MAX_LIMIT,
+)
 
 Metadata = dict[str, Any]
 
@@ -49,8 +58,9 @@ class DynamoDBMetadata(ImageMetadataRepository):
         except ClientError as exc:
             logger.error("DynamoDB put_item failed", extra={"image_id": image_id})
 
-            if exc.response.get("Error", {}).get("Code") == (
-                "ConditionalCheckFailedException"
+            if (
+                exc.response.get("Error", {}).get("Code")
+                == "ConditionalCheckFailedException"
             ):
                 raise DuplicateImageError(
                     message="This image already exists",
@@ -59,7 +69,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
 
             raise MetadataOperationFailedError(
                 message="Unable to save image metadata at this time",
-                error_code="METADATA_CREATE_FAILED",
+                error_code=ERROR_CODE_METADATA_CREATE_FAILED,
                 details={"image_id": image_id},
             ) from exc
 
@@ -67,7 +77,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
             logger.exception("Unexpected error creating metadata")
             raise MetadataOperationFailedError(
                 message="Unable to save image metadata at this time",
-                error_code="METADATA_CREATE_FAILED",
+                error_code=ERROR_CODE_METADATA_CREATE_FAILED,
                 details={"image_id": image_id},
             ) from exc
 
@@ -89,7 +99,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
             if not isinstance(item, dict):
                 raise MetadataOperationFailedError(
                     message="Invalid image metadata format",
-                    error_code="METADATA_FETCH_FAILED",
+                    error_code=ERROR_CODE_METADATA_FETCH_FAILED,
                     details={"image_id": image_id},
                 )
 
@@ -99,7 +109,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
             logger.error("DynamoDB get_item failed", extra={"image_id": image_id})
             raise MetadataOperationFailedError(
                 message="Unable to retrieve image metadata",
-                error_code="METADATA_FETCH_FAILED",
+                error_code=ERROR_CODE_METADATA_FETCH_FAILED,
                 details={"image_id": image_id},
             ) from exc
 
@@ -107,7 +117,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
             logger.exception("Unexpected error fetching metadata")
             raise MetadataOperationFailedError(
                 message="Unable to retrieve image metadata",
-                error_code="METADATA_FETCH_FAILED",
+                error_code=ERROR_CODE_METADATA_FETCH_FAILED,
                 details={"image_id": image_id},
             ) from exc
 
@@ -127,7 +137,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
             logger.error("DynamoDB delete_item failed", extra={"image_id": image_id})
             raise MetadataOperationFailedError(
                 message="Unable to delete image metadata",
-                error_code="METADATA_DELETE_FAILED",
+                error_code=ERROR_CODE_METADATA_DELETE_FAILED,
                 details={"image_id": image_id},
             ) from exc
 
@@ -135,7 +145,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
             logger.exception("Unexpected error removing metadata")
             raise MetadataOperationFailedError(
                 message="Unable to delete image metadata",
-                error_code="METADATA_DELETE_FAILED",
+                error_code=ERROR_CODE_METADATA_DELETE_FAILED,
                 details={"image_id": image_id},
             ) from exc
 
@@ -164,7 +174,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
             },
         )
 
-        if limit < 1 or limit > 100:
+        if limit < 1 or limit > MAX_LIMIT:
             raise FilterError(
                 message="Limit must be between 1 and 100",
                 details={"limit": limit},
@@ -191,26 +201,35 @@ class DynamoDBMetadata(ImageMetadataRepository):
             "ScanIndexForward": False,
         }
 
-        if start_date or end_date:
-            query_kwargs["Limit"] = limit * 2
+        items: list[Metadata] = []
+        last_evaluated_key: dict[str, Any] | None = None
 
         try:
-            response = self._db.query(**query_kwargs)
-            items = response.get("Items", [])
+            while True:
+                if last_evaluated_key:
+                    query_kwargs["ExclusiveStartKey"] = last_evaluated_key
 
-            if not isinstance(items, list):
-                raise MetadataOperationFailedError(
-                    message="Invalid query response from DynamoDB",
-                    error_code="METADATA_LIST_FAILED",
-                    details={"user_id": user_id},
-                )
+                response = self._db.query(**query_kwargs)
+                page_items = response.get("Items", [])
+
+                if not isinstance(page_items, list):
+                    raise MetadataOperationFailedError(
+                        message="Invalid query response from DynamoDB",
+                        error_code=ERROR_CODE_METADATA_LIST_FAILED,
+                        details={"user_id": user_id},
+                    )
+
+                items.extend(page_items)
+                last_evaluated_key = response.get("LastEvaluatedKey")
+
+                if not last_evaluated_key:
+                    break
 
             logger.info(
                 "User images listed",
                 extra={
                     "user_id": user_id,
                     "count": len(items),
-                    "key_condition": bool(key_condition),
                 },
             )
 
@@ -221,7 +240,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
 
             raise MetadataOperationFailedError(
                 message="Unable to list images for this user",
-                error_code="METADATA_LIST_FAILED",
+                error_code=ERROR_CODE_METADATA_LIST_FAILED,
                 details={"user_id": user_id},
             ) from exc
 
@@ -229,7 +248,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
             logger.exception("Unexpected error listing images")
             raise MetadataOperationFailedError(
                 message="Unable to list images for this user",
-                error_code="METADATA_LIST_FAILED",
+                error_code=ERROR_CODE_METADATA_LIST_FAILED,
                 details={"user_id": user_id},
             ) from exc
 
@@ -266,6 +285,6 @@ class DynamoDBMetadata(ImageMetadataRepository):
             logger.exception("Unexpected error checking duplicate")
             raise MetadataOperationFailedError(
                 message="Unable to verify duplicate image",
-                error_code="METADATA_DUPLICATE_CHECK_FAILED",
+                error_code=ERROR_CODE_METADATA_DUPLICATE_CHECK_FAILED,
                 details={"user_id": user_id},
             ) from exc

@@ -154,7 +154,7 @@ class TestListImageHandler:
 
         assert response["statusCode"] == 422
         body = json.loads(response["body"])
-        assert body["error"] == "VALIDATION_ERROR"
+        assert body["error"] == "VALIDATION_FAILED"
 
     def test_list_missing_user_id(
         self,

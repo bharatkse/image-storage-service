@@ -3,7 +3,7 @@ repos:
   # Basic hygiene checks
   # ----------------------------------------
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.6.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -20,16 +20,16 @@ repos:
     hooks:
       - id: cfn-lint
         files: ^infra/.*\.ya?ml$
-        exclude: ^infra/openapi/
+        exclude: ^openapi/
 
   # ----------------------------------------
   # OpenAPI / YAML linting
   # ----------------------------------------
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.26.3
+    rev: v1.35.1
     hooks:
       - id: yamllint
-        files: ^infra/openapi/.*\.ya?ml$
+        files: ^openapi/.*\.ya?ml$
         args:
           - --config-data
           - >
@@ -42,33 +42,44 @@ repos:
             }
 
   # ----------------------------------------
-  # Ruff: linting (auto-fix)
+  # Ruff: linting + formatting (Ruff ≥ 0.6)
   # ----------------------------------------
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.10
+    rev: v0.6.0
     hooks:
+      # Lint only (CI / pre-push friendly)
       - id: ruff
-        args:
-          - --fix
-          - --exit-non-zero-on-fix
-        exclude: ^(.aws-sam|localstack-data)/
+        name: Ruff Lint
+        exclude: ^(\.aws-sam|localstack-data)/
 
-  # ----------------------------------------
-  # Ruff: formatting (Black replacement)
-  # ----------------------------------------
+      # Lint + autofix (commit only)
+      - id: ruff
+        name: Ruff Lint (Fix)
+        args: [--fix]
+        stages: [commit]
+        exclude: ^(\.aws-sam|localstack-data)/
+
+      # Format check
       - id: ruff-format
-        exclude: ^(.aws-sam|localstack-data)/
+        name: Ruff Format
+        args: [--check]
+        exclude: ^(\.aws-sam|localstack-data)/
+
+      # Format autofix (commit only)
+      - id: ruff-format
+        name: Ruff Format (Fix)
+        stages: [commit]
+        exclude: ^(\.aws-sam|localstack-data)/
 
   # ----------------------------------------
-  # mypy: static typing (Python 3.10 aligned)
+  # mypy: static typing (Python 3.10)
   # ----------------------------------------
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.9.0
     hooks:
       - id: mypy
-        args:
-          - --ignore-missing-imports
-        exclude: ^(.aws-sam|localstack-data)/
+        args: [--ignore-missing-imports]
+        exclude: ^(\.aws-sam|localstack-data)/
 
   # ----------------------------------------
   # codespell: spelling mistakes
@@ -78,6 +89,7 @@ repos:
     hooks:
       - id: codespell
         args:
+          - --write-changes
           - --check-filenames
           - --check-hidden
           - --skip=*.lock,*.svg,*.png,*.jpg,*.jpeg,node_modules,.venv,dist,build,.aws-sam,localstack-data

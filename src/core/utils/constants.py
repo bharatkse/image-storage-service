@@ -5,37 +5,48 @@ values that are used across multiple modules. Using constants prevents hardcodin
 values and makes it easy to change them globally.
 """
 
+from typing import Final
 
 # ============================================================================
 # Error Codes
 # ============================================================================
 
-ERROR_CODE_VALIDATION = "VALIDATION_ERROR"
-ERROR_CODE_NOT_FOUND = "IMAGE_NOT_FOUND"
+
+# Validation Errors
+ERROR_CODE_VALIDATION_FAILED = "VALIDATION_FAILED"
+ERROR_CODE_INVALID_DATE_FORMAT = "INVALID_DATE_FORMAT"
+ERROR_CODE_INVALID_FILTER = "INVALID_FILTER"
+ERROR_CODE_UNSUPPORTED_MIME_TYPE = "UNSUPPORTED_MIME_TYPE"
+ERROR_CODE_FILE_SIZE_EXCEEDED = "FILE_SIZE_EXCEEDED"
+
+# Not Found Errors
+ERROR_CODE_RESOURCE_NOT_FOUND = "NOT_FOUND"
+ERROR_CODE_IMAGE_NOT_FOUND = "IMAGE_NOT_FOUND"
+
+# Storage Errors
 ERROR_CODE_S3 = "S3_ERROR"
+ERROR_CODE_IMAGE_UPLOAD_FAILED = "IMAGE_UPLOAD_FAILED"
+ERROR_CODE_IMAGE_DOWNLOAD_FAILED = "IMAGE_DOWNLOAD_FAILED"
+ERROR_CODE_IMAGE_DELETE_FAILED = "IMAGE_DELETE_FAILED"
+ERROR_CODE_IMAGE_DUPLICATE_IMAGE = "DUPLICATE_IMAGE_ERROR"
+ERROR_CODE_IMAGE_PRESIGNED_URL_FAILED = "PRESIGNED_URL_FAILED"
+
+# Metadata / DynamoDB Errors
 ERROR_CODE_DYNAMODB = "DYNAMODB_ERROR"
-ERROR_CODE_FILTER = "FILTER_ERROR"
-ERROR_CODE_MIME_TYPE = "UNSUPPORTED_MIME_TYPE"
-ERROR_CODE_FILE_SIZE = "FILE_SIZE_EXCEEDED"
-ERROR_CODE_INTERNAL = "INTERNAL_SERVER_ERROR"
+ERROR_CODE_METADATA_OPERATION_FAILED = "METADATA_OPERATION_FAILED"
+ERROR_CODE_METADATA_CREATE_FAILED = "METADATA_CREATE_FAILED"
+ERROR_CODE_METADATA_FETCH_FAILED = "METADATA_FETCH_FAILED"
+ERROR_CODE_METADATA_DELETE_FAILED = "METADATA_DELETE_FAILED"
+ERROR_CODE_METADATA_LIST_FAILED = "METADATA_LIST_FAILED"
+ERROR_CODE_METADATA_DUPLICATE_CHECK_FAILED = "METADATA_DUPLICATE_CHECK_FAILED"
+ERROR_CODE_METADATA_INVALID_FORMAT = "METADATA_INVALID_FORMAT"
+ERROR_CODE_METADATA_INVALID_STATE = "METADATA_INVALID_STATE"
 
-# ============================================================================
-# Error Messages
-# ============================================================================
+# Processing / Filtering Errors
+ERROR_CODE_FILTER_FAILED = "FILTER_FAILED"
 
-ERROR_MSG_INVALID_REQUEST = "Invalid request parameters"
-ERROR_MSG_IMAGE_NOT_FOUND = "Image not found"
-ERROR_MSG_S3_UPLOAD_FAILED = "Failed to upload image to S3"
-ERROR_MSG_S3_DOWNLOAD_FAILED = "Failed to download image from S3"
-ERROR_MSG_S3_DELETE_FAILED = "Failed to delete image from S3"
-ERROR_MSG_DB_SAVE_FAILED = "Failed to save metadata to DynamoDB"
-ERROR_MSG_DB_GET_FAILED = "Failed to retrieve metadata from DynamoDB"
-ERROR_MSG_DB_DELETE_FAILED = "Failed to delete metadata from DynamoDB"
-ERROR_MSG_DB_QUERY_FAILED = "Failed to query images from DynamoDB"
-ERROR_MSG_INVALID_MIME_TYPE = "Unsupported file type"
-ERROR_MSG_FILE_TOO_LARGE = "File size exceeds maximum limit"
-ERROR_MSG_INVALID_DATE = "Invalid date format"
-ERROR_MSG_INVALID_FILTER = "Invalid filter parameters"
+# Internal / Unexpected
+ERROR_CODE_INTERNAL_ERROR = "INTERNAL_ERROR"
 
 
 # ============================================================================
@@ -44,23 +55,20 @@ ERROR_MSG_INVALID_FILTER = "Invalid filter parameters"
 
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB in bytes
 
-ALLOWED_MIME_TYPES: list[str] = [
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-    "image/bmp",
-    "image/tiff",
-]
-
-MIME_TYPE_EXTENSION_MAP = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/gif": "gif",
-    "image/webp": "webp",
-    "image/bmp": "bmp",
-    "image/tiff": "tiff",
+MIME_TYPE_EXTENSION_MAP: Final[dict[str, tuple[str, ...]]] = {
+    "image/jpeg": ("jpg", "jpeg"),
+    "image/png": ("png",),
+    "image/gif": ("gif",),
+    "image/webp": ("webp",),
+    "image/svg+xml": ("svg",),
 }
+
+ALLOWED_MIME_TYPES: Final[frozenset[str]] = frozenset(MIME_TYPE_EXTENSION_MAP.keys())
+
+ALLOWED_EXTENSIONS: Final[frozenset[str]] = frozenset(
+    ext for extensions in MIME_TYPE_EXTENSION_MAP.values() for ext in extensions
+)
+
 
 # ============================================================================
 # Image Metadata Constraints
@@ -83,10 +91,6 @@ DEFAULT_OFFSET = 0
 # Filter Constraints
 # ============================================================================
 
-FILTER_TYPE_NAME = "name"
-FILTER_TYPE_DATE = "date"
-
-VALID_FILTER_TYPES = [FILTER_TYPE_NAME, FILTER_TYPE_DATE]
 ALLOWED_SORT_FIELDS = {"created_at", "image_name"}
 ALLOWED_SORT_ORDERS = {"asc", "desc"}
 
@@ -103,8 +107,8 @@ API_DATE_FORMAT = "YYYY-MM-DD"
 
 CORS_ORIGIN = "*"
 CORS_METHODS = "GET,POST,PUT,DELETE,OPTIONS"
-CORS_HEADERS = "Content-Type,X-Api-Key,Authorization"
-
+CORS_HEADERS = "Content-Type,Authorization,X-Api-Key"
+EXPOSE_HEADERS = "Content-Type,Content-Length,X-Image-Metadata"
 DEFAULT_CONTENT_TYPE = "application/json"
 BINARY_CONTENT_TYPE_HEADER = "Content-Type"
 
@@ -117,6 +121,9 @@ ENV_IMAGE_S3_BUCKET_NAME = "IMAGE_S3_BUCKET_NAME"
 ENV_IMAGE_METADATA_TABLE_NAME = "IMAGE_METADATA_TABLE_NAME"
 ENV_ENVIRONMENT = "ENVIRONMENT"
 ENV_AWS_REGION = "us-east-1"
+ENV_APP_RUNTIME = "APP_RUNTIME"
+LOCALSTACK_URL = "http://localstack"
+LOCALHOST_URL = "http://localhost"
 
 # ============================================================================
 # Helper Functions

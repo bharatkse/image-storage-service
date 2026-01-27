@@ -1,7 +1,8 @@
 """Shared image metadata model."""
 
-from core.models.pagination import PaginationInfo
 from pydantic import BaseModel, StrictInt, StrictStr
+
+from core.models.pagination import PaginationInfo
 
 
 class ImageMetadata(BaseModel):

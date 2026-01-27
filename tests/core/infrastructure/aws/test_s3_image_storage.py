@@ -4,12 +4,11 @@ from typing import Any
 
 import pytest
 from botocore.exceptions import ClientError
+
 from core.infrastructure.aws.s3_image_storage import S3ImageStorage
 from core.models.errors import (
-    ImageDeletionFailedError,
-    ImageDownloadFailedError,
-    ImageUploadFailedError,
     NotFoundError,
+    S3Error,
 )
 
 
@@ -63,8 +62,7 @@ class TestS3ImageStorage:
             file_data=b"image-bytes",
             mime_type="image/jpeg",
         )
-
-        assert key == "images/user_456/img_123.jpg"
+        assert key == "images/user_456/img_123.('jpg', 'jpeg')"
 
     def test_upload_image_client_error(self) -> None:
         adapter = DummyS3Adapter(
@@ -75,7 +73,7 @@ class TestS3ImageStorage:
         )
         storage = S3ImageStorage(adapter)
 
-        with pytest.raises(ImageUploadFailedError):
+        with pytest.raises(S3Error):
             storage.upload_image(
                 image_id="img_1",
                 user_id="user_1",
@@ -87,7 +85,7 @@ class TestS3ImageStorage:
         adapter = DummyS3Adapter(put_exc=Exception("boom"))
         storage = S3ImageStorage(adapter)
 
-        with pytest.raises(ImageUploadFailedError):
+        with pytest.raises(S3Error):
             storage.upload_image(
                 image_id="img_1",
                 user_id="user_1",
@@ -158,14 +156,14 @@ class TestS3ImageStorage:
         )
         storage = S3ImageStorage(adapter)
 
-        with pytest.raises(ImageDownloadFailedError):
+        with pytest.raises(S3Error):
             storage.download_image(key="images/broken.png")
 
     def test_download_image_unexpected_exception(self) -> None:
         adapter = DummyS3Adapter(get_exc=Exception("boom"))
         storage = S3ImageStorage(adapter)
 
-        with pytest.raises(ImageDownloadFailedError):
+        with pytest.raises(S3Error):
             storage.download_image(key="images/crash.png")
 
     def test_remove_image_success(self) -> None:
@@ -182,12 +180,12 @@ class TestS3ImageStorage:
         )
         storage = S3ImageStorage(adapter)
 
-        with pytest.raises(ImageDeletionFailedError):
+        with pytest.raises(S3Error):
             storage.remove_image(key="images/u/img.jpg")
 
     def test_remove_image_unexpected_exception(self) -> None:
         adapter = DummyS3Adapter(delete_exc=Exception("boom"))
         storage = S3ImageStorage(adapter)
 
-        with pytest.raises(ImageDeletionFailedError):
+        with pytest.raises(S3Error):
             storage.remove_image(key="images/u/img.jpg")

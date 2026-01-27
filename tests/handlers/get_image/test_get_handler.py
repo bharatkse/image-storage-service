@@ -146,7 +146,7 @@ class TestGetImageHandler:
 
         assert response["statusCode"] == 422
         body = json.loads(response["body"])
-        assert body["error"] == "VALIDATION_ERROR"
+        assert body["error"] == "VALIDATION_FAILED"
 
     def test_get_empty_image_id(
         self,
@@ -161,7 +161,7 @@ class TestGetImageHandler:
 
         assert response["statusCode"] == 422
         body = json.loads(response["body"])
-        assert body["error"] == "VALIDATION_ERROR"
+        assert body["error"] == "VALIDATION_FAILED"
 
     def test_metadata_flag_case_insensitive(
         self,

@@ -3,11 +3,12 @@
 import json
 from typing import Any
 
+from pydantic import BaseModel
+
 from core.utils.validators import (
     sanitize_validation_errors,
     validate_request,
 )
-from pydantic import BaseModel
 
 
 class SampleModel(BaseModel):

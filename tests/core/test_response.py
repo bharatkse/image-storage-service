@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
+
 from core.utils.response import JsonDict, ResponseBuilder, api_handler, handle_exception
 
 
@@ -86,7 +87,7 @@ def test_validation_error() -> None:
     parsed = parse_body(resp)
 
     assert resp["statusCode"] == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert parsed["error"] == "VALIDATION_ERROR"
+    assert parsed["error"] == "VALIDATION_FAILED"
     assert parsed["message"] == "Invalid input"
     assert parsed["details"]["field"] == "name"
     assert parsed["request_id"] == "req-val"

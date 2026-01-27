@@ -8,10 +8,11 @@ from typing import Any
 
 from aws_lambda_powertools import Logger, Metrics, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
+
 from core.models.errors import (
     DuplicateImageError,
-    ImageUploadFailedError,
     MetadataOperationFailedError,
+    S3Error,
     ValidationError,
 )
 from core.utils.response import ResponseBuilder
@@ -95,7 +96,7 @@ def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
             message=exc.message,
         )
 
-    except (ImageUploadFailedError, MetadataOperationFailedError) as exc:
+    except (S3Error, MetadataOperationFailedError) as exc:
         logger.exception(
             "Infrastructure error during image upload",
             extra={"user_id": request.user_id},

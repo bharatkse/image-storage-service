@@ -6,11 +6,8 @@ from typing import Any
 
 from aws_lambda_powertools import Logger, Metrics, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from core.models.errors import (
-    ImageDeletionFailedError,
-    MetadataOperationFailedError,
-    NotFoundError,
-)
+
+from core.models.errors import MetadataOperationFailedError, NotFoundError, S3Error
 from core.utils.response import ResponseBuilder
 from core.utils.validators import validate_request
 
@@ -77,7 +74,7 @@ def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
         )
         return ResponseBuilder.not_found(f"Image not found: {request.image_id}")
 
-    except (ImageDeletionFailedError, MetadataOperationFailedError) as exc:
+    except (S3Error, MetadataOperationFailedError) as exc:
         logger.exception(
             "Deletion failed",
             extra={"image_id": request.image_id},

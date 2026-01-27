@@ -1,5 +1,5 @@
 """
-Pytest configuration and fixtures for image-stream tests.
+Pytest configuration and fixtures for image-storage tests.
 Provides AWS mocking, DynamoDB and S3 fixtures with proper cleanup.
 """
 

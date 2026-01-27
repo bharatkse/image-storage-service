@@ -1,6 +1,7 @@
 """Unit tests for InMemoryImageFilter."""
 
 import pytest
+
 from core.filters.in_memory_image_filter import InMemoryImageFilter
 
 

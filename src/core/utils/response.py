@@ -11,6 +11,14 @@ from functools import wraps
 from http import HTTPStatus
 from typing import Any, Protocol
 
+from core.utils.constants import (
+    CORS_HEADERS,
+    CORS_METHODS,
+    CORS_ORIGIN,
+    DEFAULT_CONTENT_TYPE,
+    ERROR_CODE_VALIDATION_FAILED,
+    EXPOSE_HEADERS,
+)
 from core.utils.time import utc_now_iso
 
 JsonDict = dict[str, Any]
@@ -30,21 +38,25 @@ class ResponseBuilder:
     """Factory for API Gateway-compatible HTTP responses."""
 
     DEFAULT_HEADERS: dict[str, str] = {
-        "Content-Type": "application/json",
+        "Content-Type": DEFAULT_CONTENT_TYPE,
     }
 
-    CORS_HEADERS: dict[str, str] = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Api-Key",
-        "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE",
+    DEFAULT_CORS_HEADERS: dict[str, str] = {
+        "Access-Control-Allow-Origin": CORS_ORIGIN,
+        "Access-Control-Allow-Headers": CORS_HEADERS,
+        "Access-Control-Allow-Methods": CORS_METHODS,
+        "Access-Control-Expose-Headers": EXPOSE_HEADERS,
     }
 
     @staticmethod
     def _build_headers(cors_origin: str | None = None) -> dict[str, str]:
         headers: dict[str, str] = dict(ResponseBuilder.DEFAULT_HEADERS)
 
+        # Always include CORS headers
+        headers.update(ResponseBuilder.DEFAULT_CORS_HEADERS)
+
+        # Allow override (for future multi-origin support)
         if cors_origin:
-            headers.update(ResponseBuilder.CORS_HEADERS)
             headers["Access-Control-Allow-Origin"] = cors_origin
 
         return headers
@@ -163,7 +175,7 @@ class ResponseBuilder:
         """422 Unprocessable Entity validation error."""
         return ResponseBuilder.error(
             status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            error="VALIDATION_ERROR",
+            error=ERROR_CODE_VALIDATION_FAILED,
             message=message,
             details=details,
             request_id=request_id,
@@ -227,33 +239,6 @@ class ResponseBuilder:
         )
 
     @staticmethod
-    def problem_detail(
-        *,
-        status: HTTPStatus,
-        title: str,
-        detail: str,
-        instance: str | None = None,
-        request_id: str | None = None,
-        cors_origin: str | None = None,
-    ) -> JsonDict:
-        payload: JsonDict = {
-            "type": f"https://httpstatuses.com/{status.value}",
-            "title": title,
-            "status": status.value,
-            "detail": detail,
-        }
-
-        if instance:
-            payload["instance"] = instance
-
-        return ResponseBuilder._response(
-            status=status,
-            body=payload,
-            request_id=request_id,
-            cors_origin=cors_origin,
-        )
-
-    @staticmethod
     def binary_response(
         content: bytes,
         *,
@@ -264,23 +249,22 @@ class ResponseBuilder:
         response_headers: dict[str, str] = {
             "Content-Type": content_type,
             "Content-Length": str(len(content)),
+            "Access-Control-Expose-Headers": EXPOSE_HEADERS,
         }
 
         if cors_origin:
-            response_headers.update(ResponseBuilder.CORS_HEADERS)
+            response_headers.update(ResponseBuilder.DEFAULT_CORS_HEADERS)
             response_headers["Access-Control-Allow-Origin"] = cors_origin
 
         if headers:
             response_headers.update(headers)
 
-        response: JsonDict = {
+        return {
             "statusCode": HTTPStatus.OK.value,
             "headers": response_headers,
             "body": base64.b64encode(content).decode("utf-8"),
             "isBase64Encoded": True,
         }
-
-        return response
 
 
 def handle_exception(
@@ -314,6 +298,13 @@ def api_handler(func: LambdaHandler) -> Callable[..., JsonDict]:
         *,
         cors_origin: str | None = None,
     ) -> JsonDict:
+        if event.get("httpMethod") == "OPTIONS":
+            return {
+                "statusCode": HTTPStatus.NO_CONTENT.value,
+                "headers": ResponseBuilder._build_headers(cors_origin),
+                "body": "",
+            }
+
         request_id = getattr(context, "aws_request_id", None)
 
         try:

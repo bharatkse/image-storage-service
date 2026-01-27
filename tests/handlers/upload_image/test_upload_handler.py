@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 from core.models.errors import (
     DuplicateImageError,
-    ImageUploadFailedError,
     MetadataOperationFailedError,
+    S3Error,
     ValidationError,
 )
 from core.utils.constants import MAX_FILE_SIZE
@@ -135,7 +135,7 @@ class TestUploadHandler:
     def test_upload_s3_failure(self, lambda_context) -> None:
         with patch(
             "handlers.upload_image.service.UploadService.upload_image",
-            side_effect=ImageUploadFailedError(message="S3 down"),
+            side_effect=S3Error(message="S3 down"),
         ):
             event = {
                 "body": json.dumps(
@@ -187,7 +187,7 @@ class TestUploadHandler:
 
         assert response["statusCode"] == 422
         body = json.loads(response["body"])
-        assert body["error"] == "VALIDATION_ERROR"
+        assert body["error"] == "VALIDATION_FAILED"
 
     def test_upload_metadata_failure(self, lambda_context) -> None:
         with patch(

@@ -9,10 +9,7 @@ from core.models.errors import (
     DynamoDBError,
     FileSizeError,
     FilterError,
-    ImageDeletionFailedError,
-    ImageDownloadFailedError,
     ImageServiceError,
-    ImageUploadFailedError,
     MetadataOperationFailedError,
     MIMETypeError,
     NotFoundError,
@@ -40,7 +37,7 @@ class TestValidationError:
         err = ValidationError(message="Invalid input")
         typed = cast(ValidationError, err)
 
-        assert typed.error_code == "VALIDATION_ERROR"
+        assert typed.error_code == "VALIDATION_FAILED"
         assert typed.details == {}
         assert str(typed) == "Invalid input"
 
@@ -114,26 +111,6 @@ class TestDynamoDBError:
         assert typed.details == {"operation": "query"}
 
 
-class TestImageStorageErrors:
-    def test_image_upload_failed_error(self) -> None:
-        err = ImageUploadFailedError(message="Upload failed")
-        typed = cast(ImageUploadFailedError, err)
-
-        assert typed.error_code == "IMAGE_UPLOAD_FAILED"
-
-    def test_image_download_failed_error(self) -> None:
-        err = ImageDownloadFailedError(message="Download failed")
-        typed = cast(ImageDownloadFailedError, err)
-
-        assert typed.error_code == "IMAGE_DOWNLOAD_FAILED"
-
-    def test_image_deletion_failed_error(self) -> None:
-        err = ImageDeletionFailedError(message="Delete failed")
-        typed = cast(ImageDeletionFailedError, err)
-
-        assert typed.error_code == "IMAGE_DELETION_FAILED"
-
-
 class TestFilterError:
     def test_filter_error(self) -> None:
         err = FilterError(
@@ -142,7 +119,7 @@ class TestFilterError:
         )
         typed = cast(FilterError, err)
 
-        assert typed.error_code == "FILTER_ERROR"
+        assert typed.error_code == "INVALID_FILTER"
         assert typed.details == {"filter": "date"}
 
 

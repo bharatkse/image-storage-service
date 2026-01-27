@@ -4,6 +4,7 @@ import os
 from typing import Any, Protocol, cast
 
 import boto3
+
 from core.utils.constants import (
     ENV_AWS_ENDPOINT_URL,
     ENV_AWS_REGION,

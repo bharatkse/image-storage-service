@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from botocore.exceptions import ClientError
+
 from handlers.delete_image.handler import handler
 
 
@@ -75,14 +76,14 @@ class TestDeleteImageHandler:
 
         assert response["statusCode"] == 422
         body = json.loads(response["body"])
-        assert body["error"] == "VALIDATION_ERROR"
+        assert body["error"] == "VALIDATION_FAILED"
 
     def test_delete_empty_path_parameters(self, lambda_context) -> None:
         response = handler({"pathParameters": {}}, lambda_context)
 
         assert response["statusCode"] == 422
         body = json.loads(response["body"])
-        assert body["error"] == "VALIDATION_ERROR"
+        assert body["error"] == "VALIDATION_FAILED"
 
     def test_delete_invalid_metadata_state(
         self,

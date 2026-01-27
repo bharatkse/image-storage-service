@@ -1,9 +1,10 @@
 import pytest
 from botocore.exceptions import ClientError
+
 from core.models.errors import (
-    ImageDeletionFailedError,
     MetadataOperationFailedError,
     NotFoundError,
+    S3Error,
 )
 from handlers.delete_image.service import DeleteService
 
@@ -99,7 +100,7 @@ class TestDeleteService:
             fail_storage_delete,
         )
 
-        with pytest.raises(ImageDeletionFailedError):
+        with pytest.raises(S3Error):
             service.delete_image("img_s3_fail")
 
     def test_delete_image_db_failure_after_s3_delete(

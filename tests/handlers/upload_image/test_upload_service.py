@@ -2,10 +2,11 @@ import base64
 from unittest.mock import patch
 
 import pytest
+
 from core.models.errors import (
     DuplicateImageError,
-    ImageUploadFailedError,
     MetadataOperationFailedError,
+    S3Error,
     ValidationError,
 )
 from handlers.upload_image.service import UploadService
@@ -114,7 +115,7 @@ class TestUploadService:
                 side_effect=Exception("S3 down"),
             ),
         ):
-            with pytest.raises(ImageUploadFailedError):
+            with pytest.raises(S3Error):
                 service.upload_image(
                     user_id="user_1",
                     image_name="photo.png",

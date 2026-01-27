@@ -1,8 +1,9 @@
 """Unit tests for delete handler models."""
 
 import pytest
-from handlers.delete_image.models import DeleteImageRequest
 from pydantic import ValidationError
+
+from handlers.delete_image.models import DeleteImageRequest
 
 
 class TestDeleteModels:

@@ -2,6 +2,18 @@
 
 from typing import Any
 
+from core.utils.constants import (
+    ERROR_CODE_DYNAMODB,
+    ERROR_CODE_FILE_SIZE_EXCEEDED,
+    ERROR_CODE_IMAGE_DUPLICATE_IMAGE,
+    ERROR_CODE_INVALID_FILTER,
+    ERROR_CODE_METADATA_OPERATION_FAILED,
+    ERROR_CODE_RESOURCE_NOT_FOUND,
+    ERROR_CODE_S3,
+    ERROR_CODE_UNSUPPORTED_MIME_TYPE,
+    ERROR_CODE_VALIDATION_FAILED,
+)
+
 
 class ImageServiceError(Exception):
     """
@@ -37,7 +49,7 @@ class ValidationError(ImageServiceError):
         self,
         *,
         message: str,
-        error_code: str = "VALIDATION_ERROR",
+        error_code: str = ERROR_CODE_VALIDATION_FAILED,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
@@ -54,7 +66,7 @@ class NotFoundError(ImageServiceError):
         self,
         *,
         message: str,
-        error_code: str = "NOT_FOUND",
+        error_code: str = ERROR_CODE_RESOURCE_NOT_FOUND,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
@@ -71,7 +83,7 @@ class DuplicateImageError(ImageServiceError):
         self,
         *,
         message: str,
-        error_code: str = "DUPLICATE_IMAGE_ERROR",
+        error_code: str = ERROR_CODE_IMAGE_DUPLICATE_IMAGE,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
@@ -88,7 +100,7 @@ class MetadataOperationFailedError(ImageServiceError):
         self,
         *,
         message: str,
-        error_code: str = "METADATA_OPERATION_FAILED",
+        error_code: str = ERROR_CODE_METADATA_OPERATION_FAILED,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
@@ -105,7 +117,7 @@ class S3Error(ImageServiceError):
         self,
         *,
         message: str,
-        error_code: str = "S3_ERROR",
+        error_code: str = ERROR_CODE_S3,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
@@ -122,58 +134,7 @@ class DynamoDBError(ImageServiceError):
         self,
         *,
         message: str,
-        error_code: str = "DYNAMODB_ERROR",
-        details: dict[str, Any] | None = None,
-    ) -> None:
-        super().__init__(
-            message=message,
-            error_code=error_code,
-            details=details,
-        )
-
-
-class ImageUploadFailedError(ImageServiceError):
-    """Raised when image upload fails."""
-
-    def __init__(
-        self,
-        *,
-        message: str,
-        error_code: str = "IMAGE_UPLOAD_FAILED",
-        details: dict[str, Any] | None = None,
-    ) -> None:
-        super().__init__(
-            message=message,
-            error_code=error_code,
-            details=details,
-        )
-
-
-class ImageDownloadFailedError(ImageServiceError):
-    """Raised when image download fails."""
-
-    def __init__(
-        self,
-        *,
-        message: str,
-        error_code: str = "IMAGE_DOWNLOAD_FAILED",
-        details: dict[str, Any] | None = None,
-    ) -> None:
-        super().__init__(
-            message=message,
-            error_code=error_code,
-            details=details,
-        )
-
-
-class ImageDeletionFailedError(ImageServiceError):
-    """Raised when image deletion fails."""
-
-    def __init__(
-        self,
-        *,
-        message: str,
-        error_code: str = "IMAGE_DELETION_FAILED",
+        error_code: str = ERROR_CODE_DYNAMODB,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
@@ -190,7 +151,7 @@ class FilterError(ImageServiceError):
         self,
         *,
         message: str,
-        error_code: str = "FILTER_ERROR",
+        error_code: str = ERROR_CODE_INVALID_FILTER,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
@@ -207,7 +168,7 @@ class MIMETypeError(ImageServiceError):
         self,
         *,
         message: str,
-        error_code: str = "UNSUPPORTED_MIME_TYPE",
+        error_code: str = ERROR_CODE_UNSUPPORTED_MIME_TYPE,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
@@ -224,7 +185,7 @@ class FileSizeError(ImageServiceError):
         self,
         *,
         message: str,
-        error_code: str = "FILE_SIZE_EXCEEDED",
+        error_code: str = ERROR_CODE_FILE_SIZE_EXCEEDED,
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
