@@ -1,3 +1,7 @@
+"""
+Unit tests for DynamoDBAdapter.
+"""
+
 from botocore.exceptions import ClientError
 import pytest
 
@@ -6,13 +10,14 @@ from core.utils.constants import ENV_IMAGE_METADATA_TABLE_NAME
 
 
 class TestDynamoDBAdapter:
-    def test_init_missing_table_env(self, monkeypatch):
+    def test_init_missing_table_env(self, monkeypatch) -> None:
+        """Adapter should fail fast if table env var is missing."""
         monkeypatch.delenv(ENV_IMAGE_METADATA_TABLE_NAME, raising=False)
 
         with pytest.raises(RuntimeError):
             DynamoDBAdapter()
 
-    def test_put_and_get_item_success(self, dynamodb_table):
+    def test_put_and_get_item_success(self, dynamodb_table) -> None:
         adapter = DynamoDBAdapter()
 
         item = {
@@ -27,7 +32,7 @@ class TestDynamoDBAdapter:
         assert response["Item"]["image_id"] == "img_1"
         assert response["Item"]["user_id"] == "john"
 
-    def test_put_item_with_condition_expression(self, dynamodb_table):
+    def test_put_item_with_condition_expression(self, dynamodb_table) -> None:
         adapter = DynamoDBAdapter()
 
         item = {
@@ -46,7 +51,7 @@ class TestDynamoDBAdapter:
                 condition_expression="attribute_not_exists(image_id)",
             )
 
-    def test_delete_item_success(self, dynamodb_table):
+    def test_delete_item_success(self, dynamodb_table) -> None:
         adapter = DynamoDBAdapter()
 
         adapter.put_item(item={"image_id": "img_del"})
@@ -55,7 +60,7 @@ class TestDynamoDBAdapter:
         response = adapter.get_item(key={"image_id": "img_del"})
         assert "Item" not in response
 
-    def test_query_returns_items(self, dynamodb_table):
+    def test_query_returns_items(self, dynamodb_table) -> None:
         adapter = DynamoDBAdapter()
 
         adapter.put_item(
@@ -81,7 +86,7 @@ class TestDynamoDBAdapter:
 
         assert len(response["Items"]) == 2
 
-    def test_get_item_bubbles_client_error(self, monkeypatch, dynamodb_table):
+    def test_get_item_bubbles_client_error(self, monkeypatch, dynamodb_table) -> None:
         adapter = DynamoDBAdapter()
 
         def raise_error(**_):
@@ -90,12 +95,12 @@ class TestDynamoDBAdapter:
                 "GetItem",
             )
 
-        monkeypatch.setattr(adapter.table, "get_item", raise_error)
+        monkeypatch.setattr(adapter._table, "get_item", raise_error)
 
         with pytest.raises(ClientError):
             adapter.get_item(key={"image_id": "img_x"})
 
-    def test_delete_item_bubbles_client_error(self, monkeypatch, dynamodb_table):
+    def test_delete_item_bubbles_client_error(self, monkeypatch, dynamodb_table) -> None:
         adapter = DynamoDBAdapter()
 
         def raise_error(**_):
@@ -104,12 +109,12 @@ class TestDynamoDBAdapter:
                 "DeleteItem",
             )
 
-        monkeypatch.setattr(adapter.table, "delete_item", raise_error)
+        monkeypatch.setattr(adapter._table, "delete_item", raise_error)
 
         with pytest.raises(ClientError):
             adapter.delete_item(key={"image_id": "img_x"})
 
-    def test_query_bubbles_client_error(self, monkeypatch, dynamodb_table):
+    def test_query_bubbles_client_error(self, monkeypatch, dynamodb_table) -> None:
         adapter = DynamoDBAdapter()
 
         def raise_error(**_):
@@ -118,7 +123,7 @@ class TestDynamoDBAdapter:
                 "Query",
             )
 
-        monkeypatch.setattr(adapter.table, "query", raise_error)
+        monkeypatch.setattr(adapter._table, "query", raise_error)
 
         with pytest.raises(ClientError):
             adapter.query(IndexName="idx")

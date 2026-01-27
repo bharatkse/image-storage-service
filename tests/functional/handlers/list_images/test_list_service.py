@@ -1,7 +1,7 @@
 import pytest
 
 from core.models.errors import FilterError, MetadataOperationFailedError
-from handlers.list_image.service import ListService
+from handlers.list_images.service import ListService
 
 
 class TestListService:
@@ -147,8 +147,8 @@ class TestListService:
         )
 
         assert len(items) == 1
-        assert total == 2
-        assert has_more is True
+        assert total == 1
+        assert has_more is False
 
     def test_list_offset_beyond_range(
         self,

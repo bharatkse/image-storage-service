@@ -32,11 +32,13 @@ class DummyS3Adapter:
         get_exc: Exception | None = None,
         delete_exc: Exception | None = None,
         get_response: dict[str, Any] | None = None,
+        presigned_url: str = "https://example.com/presigned",
     ) -> None:
         self._put_exc = put_exc
         self._get_exc = get_exc
         self._delete_exc = delete_exc
         self._get_response = get_response or {}
+        self._presigned_url = presigned_url
 
     def put_object(self, **_: Any) -> None:
         if self._put_exc:
@@ -51,6 +53,15 @@ class DummyS3Adapter:
         if self._delete_exc:
             raise self._delete_exc
 
+    def generate_presigned_url(
+        self,
+        *,
+        method: str,
+        params: dict[str, Any],
+        expires_in: int,
+    ) -> str:
+        return self._presigned_url
+
 
 class TestS3ImageStorage:
     def test_upload_image_success(self) -> None:
@@ -62,7 +73,7 @@ class TestS3ImageStorage:
             file_data=b"image-bytes",
             mime_type="image/jpeg",
         )
-        assert key == "images/user_456/img_123.('jpg', 'jpeg')"
+        assert key == "images/user_456/img_123.jpg"
 
     def test_upload_image_client_error(self) -> None:
         adapter = DummyS3Adapter(

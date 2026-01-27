@@ -6,10 +6,15 @@ from typing import Any
 
 from aws_lambda_powertools import Logger, Metrics, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from pydantic import ValidationError
 
-from core.models.errors import MetadataOperationFailedError, NotFoundError, S3Error
+from core.models.errors import (
+    MetadataOperationFailedError,
+    NotFoundError,
+    S3Error,
+)
 from core.utils.response import ResponseBuilder
-from core.utils.validators import validate_request
+from core.utils.validators import sanitize_validation_errors, validate_request
 
 from .models import DeleteImageRequest, DeleteImageResponse
 from .service import DeleteService
@@ -21,7 +26,7 @@ metrics = Metrics()
 
 @tracer.capture_lambda_handler
 @metrics.log_metrics()
-def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
+def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
     """
     Handle image deletion requests.
 
@@ -31,37 +36,30 @@ def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
     - Delegates deletion to the service layer
     - Translates domain and runtime errors into HTTP responses
 
-    Expected API Gateway event structure:
-    {
-        "pathParameters": {
-            "image_id": "img_123..."
-        }
-    }
-
     Args:
         event: API Gateway Lambda proxy event
         context: AWS Lambda execution context
 
     Returns:
-        API Gateway-compatible HTTP response dictionary
+        API Gateway-compatible HTTP response
     """
-    # Extract path parameters (API Gateway may pass None)
     path_params = event.get("pathParameters") or {}
 
-    # Validate and hydrate request model
-    is_valid, result = validate_request(
-        DeleteImageRequest,
-        {"image_id": path_params.get("image_id")},
-    )
-    if not is_valid:
+    try:
+        request = validate_request(
+            DeleteImageRequest,
+            {"image_id": path_params.get("image_id")},
+        )
+    except ValidationError as exc:
         logger.error(
             "Request validation failed",
-            extra={"validation_result": str(result)},
+            extra={"errors": exc.errors()},
         )
-        # Validation errors already return a formatted HTTP response
-        return result
+        return ResponseBuilder.validation_error(
+            message="Invalid request payload",
+            details={"errors": sanitize_validation_errors(exc.errors())},
+        )
 
-    request = result
     service = DeleteService()
 
     try:

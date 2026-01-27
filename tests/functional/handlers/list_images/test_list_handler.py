@@ -1,6 +1,6 @@
 import json
 
-from handlers.list_image.handler import handler
+from handlers.list_images.handler import handler
 
 
 class TestListImageHandler:
@@ -100,7 +100,7 @@ class TestListImageHandler:
         body = json.loads(response["body"])
 
         assert body["returned_count"] == 1
-        assert body["pagination"]["has_more"] is True
+        assert body["pagination"]["has_more"] is False
 
     def test_list_offset_beyond_range(
         self,

@@ -8,6 +8,7 @@ from typing import Any
 
 from aws_lambda_powertools import Logger, Metrics, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from pydantic import ValidationError as PydanticValidationError
 
 from core.models.errors import (
     DuplicateImageError,
@@ -16,7 +17,7 @@ from core.models.errors import (
     ValidationError,
 )
 from core.utils.response import ResponseBuilder
-from core.utils.validators import validate_request
+from core.utils.validators import sanitize_validation_errors, validate_request
 
 from .models import ImageUploadRequest, ImageUploadResponse
 from .service import UploadService
@@ -28,7 +29,7 @@ metrics = Metrics()
 
 @tracer.capture_lambda_handler
 @metrics.log_metrics()
-def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
+def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
     """
     Handle image upload requests.
 
@@ -56,15 +57,17 @@ def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
         logger.exception("Invalid JSON body received", exc_info=exc)
         return ResponseBuilder.validation_error(message="Invalid JSON body")
 
-    is_valid, result = validate_request(ImageUploadRequest, body)
-    if not is_valid:
+    try:
+        request = validate_request(ImageUploadRequest, body)
+    except PydanticValidationError as exc:
         logger.error(
             "Request validation failed",
-            extra={"validation_result": str(result)},
+            extra={"errors": exc.errors()},
         )
-        return result
-
-    request: ImageUploadRequest = result
+        return ResponseBuilder.validation_error(
+            message="Invalid request params",
+            details={"errors": sanitize_validation_errors(exc.errors())},
+        )
 
     try:
         file_data = UploadService.decode_file(request.file)

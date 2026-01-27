@@ -32,7 +32,7 @@ SHELL := /bin/bash
 	ls-lambda ls-api-id ls-api-key ls-api \
 	cf-build cf-deploy cf-status cf-logs cf-delete \
 	seed cleanup-seed guard-api \
-	restart restart-hard clean-local
+	restart-hard clean-local
 
 # ============================================================================
 # Configuration
@@ -147,7 +147,6 @@ help:
 	@echo "  make docker-status        Show LocalStack status"
 	@echo "  make docker-health        Show LocalStack health"
 	@echo "  make docker-logs          Follow container logs"
-	@echo "  make docker-shell         Shell into LocalStack container"
 	@echo "  make docker-clean         Reset Docker resources"
 	@echo "  make docker-shell-localstack | docker-shell-swagger"
 	@echo ""
@@ -174,7 +173,6 @@ help:
 	@echo "  make cf-delete            Delete stack"
 	@echo ""
 	@echo "Convenience:"
-	@echo "  make restart              Redeploy stack"
 	@echo "  make restart-hard         Full reset and redeploy"
 	@echo ""
 	@echo "Logs:"
@@ -419,9 +417,12 @@ cf-logs:
 	  --stack-name $(STACK_NAME) --output table
 
 cf-delete:
-	@$(AWS_ENV) aws cloudformation delete-stack \
-	  --stack-name $(STACK_NAME) \
-	  2>/dev/null || echo "CloudFormation not reachable, skipping delete"
+	@echo "Deleting CloudFormation stack: $(STACK_NAME)"
+	@echo "1) Stopping Docker services..."
+	@$(MAKE) docker-clean || true
+
+	@echo "2) Cleaning LocalStack persistent data..."
+	@$(MAKE) clean-local || true
 
 # ============================================================================
 # Seed & Cleanup (API-based)

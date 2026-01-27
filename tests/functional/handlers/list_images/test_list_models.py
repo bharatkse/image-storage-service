@@ -6,7 +6,7 @@ from pydantic import ValidationError
 import pytest
 
 from core.utils.constants import DEFAULT_LIMIT, DEFAULT_OFFSET
-from handlers.list_image.models import ListImagesRequest
+from handlers.list_images.models import ListImagesRequest
 
 
 class TestListImagesRequest:
@@ -45,6 +45,7 @@ class TestListImagesRequest:
         )
 
         assert req.start_date == "2024-01-15T00:00:00+00:00"
+        assert req.end_date is None
 
     def test_valid_end_date_normalization(self) -> None:
         req = ListImagesRequest(
@@ -53,6 +54,7 @@ class TestListImagesRequest:
         )
 
         assert req.end_date == "2024-01-15T23:59:59.999999+00:00"
+        assert req.start_date is None
 
     def test_valid_date_range(self) -> None:
         req = ListImagesRequest(
@@ -61,16 +63,19 @@ class TestListImagesRequest:
             end_date="2024-01-31",
         )
 
+        # Explicit narrowing for mypy
+        assert req.start_date is not None
+        assert req.end_date is not None
         assert req.start_date < req.end_date
 
-    def test_invalid_date_format_start_date(self) -> None:
+    def test_invalid_start_date_format_rejected(self) -> None:
         with pytest.raises(ValidationError):
             ListImagesRequest(
                 user_id="john_doe",
                 start_date="15-01-2024",
             )
 
-    def test_invalid_date_format_end_date(self) -> None:
+    def test_invalid_end_date_format_rejected(self) -> None:
         with pytest.raises(ValidationError):
             ListImagesRequest(
                 user_id="john_doe",
@@ -85,7 +90,7 @@ class TestListImagesRequest:
                 end_date="2024-01-01",
             )
 
-    def test_limit_lower_bound(self) -> None:
+    def test_limit_lower_bound_valid(self) -> None:
         req = ListImagesRequest(
             user_id="john_doe",
             limit=1,
@@ -93,7 +98,7 @@ class TestListImagesRequest:
 
         assert req.limit == 1
 
-    def test_limit_upper_bound(self) -> None:
+    def test_limit_upper_bound_valid(self) -> None:
         req = ListImagesRequest(
             user_id="john_doe",
             limit=100,
@@ -130,7 +135,7 @@ class TestListImagesRequest:
                 offset=-1,
             )
 
-    def test_sorting_explicit_valid(self) -> None:
+    def test_explicit_sorting_valid(self) -> None:
         req = ListImagesRequest(
             user_id="john_doe",
             sort_by="image_name",

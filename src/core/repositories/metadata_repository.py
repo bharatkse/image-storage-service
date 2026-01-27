@@ -18,11 +18,15 @@ class ImageMetadataRepository(ABC):
         """Create metadata for an image.
 
         Args:
-            metadata: Image metadata dict
+            metadata: Image metadata dict with required keys:
+                     - image_id: str
+                     - user_id: str
+                     - file_hash: str
+                     - created_at: str (ISO-8601 UTC format)
 
         Raises:
-            DuplicateImageError: If image already exists
-            DynamoDBError: If creation fails
+            DuplicateImageError: If image already exists for this user
+            DynamoDBError: If creation fails for other reasons
         """
 
     @abstractmethod
@@ -56,23 +60,22 @@ class ImageMetadataRepository(ABC):
         *,
         user_id: str,
         limit: int,
-        name_contains: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> list[Metadata]:
-        """List images for a user with optional filters.
+        """List images for a user with optional date filtering.
 
         Args:
             user_id: Image owner
-            limit: Maximum results
-            name_contains: Optional filter by name
-            start_date: Optional filter start date
-            end_date: Optional filter end date
+            limit: Maximum results (1-100)
+            start_date: Optional filter start date (ISO-8601 format)
+            end_date: Optional filter end date (ISO-8601 format)
 
         Returns:
-            List of metadata dicts
+            List of metadata dicts, sorted newest first
 
         Raises:
+            FilterError: If limit or dates are invalid
             DynamoDBError: If query fails
         """
 
@@ -85,7 +88,7 @@ class ImageMetadataRepository(ABC):
             file_hash: Hash of image content
 
         Returns:
-            True if duplicate exists
+            True if duplicate exists for this user, False otherwise
 
         Raises:
             DynamoDBError: If check fails

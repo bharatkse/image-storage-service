@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 from aws_lambda_powertools import Logger, Metrics, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from pydantic import ValidationError
 
 from core.models.errors import (
     MetadataOperationFailedError,
@@ -13,7 +14,7 @@ from core.models.errors import (
     S3Error,
 )
 from core.utils.response import ResponseBuilder
-from core.utils.validators import validate_request
+from core.utils.validators import sanitize_validation_errors, validate_request
 
 from .models import GetImageRequest, ImageMetadataHeader
 from .service import GetService
@@ -25,13 +26,20 @@ metrics = Metrics()
 
 @tracer.capture_lambda_handler
 @metrics.log_metrics()
-def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
+def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
     """
     Handle image view or download requests.
 
-    - Default: return view URL
-    - download=true: return download URL
-    - metadata=true: include metadata in response
+    This function:
+     - Default: return view URL
+        - download=true: return download URL
+        - metadata=true: include metadata in response
+    Args:
+        event: API Gateway event payload.
+        context: AWS Lambda runtime context.
+
+    Returns:
+        API Gateway-compatible response dictionary.
     """
 
     path_params = event.get("pathParameters") or {}
@@ -43,12 +51,21 @@ def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
         "download": query_params.get("download", "false").lower() == "true",
     }
 
-    is_valid, result = validate_request(GetImageRequest, params)
-    if not is_valid:
-        logger.error("Validation error: %s", result)
-        return result
+    try:
+        request = validate_request(
+            GetImageRequest,
+            params,
+        )
+    except ValidationError as exc:
+        logger.error(
+            "Request validation failed",
+            extra={"errors": exc.errors()},
+        )
+        return ResponseBuilder.validation_error(
+            message="Invalid request params",
+            details={"errors": sanitize_validation_errors(exc.errors())},
+        )
 
-    request = result
     service = GetService()
 
     mode: Literal["view", "download"] = "download" if request.download else "view"

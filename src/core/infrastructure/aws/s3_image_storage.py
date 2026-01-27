@@ -1,12 +1,11 @@
 """S3-backed implementation of ImageStorageRepository."""
 
-from collections.abc import Mapping
 from typing import Any
 
 from aws_lambda_powertools import Logger
 from botocore.exceptions import ClientError
 
-from core.infrastructure.adapters.s3_adapter import S3Adapter
+from core.infrastructure.adapters.s3_adapter import S3Adapter, S3AdapterProtocol
 from core.models.errors import (
     NotFoundError,
     S3Error,
@@ -26,9 +25,9 @@ logger = Logger(UTC=True)
 class S3ImageStorage(ImageStorageRepository):
     """Image storage implementation backed by Amazon S3."""
 
-    def __init__(self, adapter: S3Adapter | None = None) -> None:
+    def __init__(self, adapter: S3AdapterProtocol | None = None) -> None:
         """Create storage using the provided S3 adapter."""
-        self._s3 = adapter or S3Adapter()
+        self._s3: S3AdapterProtocol = adapter or S3Adapter()
 
     def upload_image(
         self,
@@ -196,5 +195,9 @@ class S3ImageStorage(ImageStorageRepository):
     @staticmethod
     def _get_extension(mime_type: str) -> str:
         """Return file extension for a given MIME type."""
-        mime_map: Mapping[str, str] = MIME_TYPE_EXTENSION_MAP
-        return mime_map.get(mime_type, "bin")
+        ext = MIME_TYPE_EXTENSION_MAP.get(mime_type)
+        if not ext:
+            return "bin"
+
+        # MIME_TYPE_EXTENSION_MAP values are tuple[str, ...]
+        return ext[0]

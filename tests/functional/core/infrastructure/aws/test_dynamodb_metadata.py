@@ -1,4 +1,6 @@
-"""Unit tests for DynamoDBMetadata repository."""
+"""
+Unit tests for DynamoDBMetadata repository.
+"""
 
 from collections.abc import Callable
 from typing import Any
@@ -9,13 +11,13 @@ import pytest
 from core.infrastructure.aws.dynamodb_metadata import DynamoDBMetadata
 from core.models.errors import (
     DuplicateImageError,
+    DynamoDBError,
     FilterError,
-    MetadataOperationFailedError,
 )
 
 
 class DummyAdapter:
-    """Minimal DynamoDBAdapter stub."""
+    """Minimal DynamoDBAdapter test double."""
 
     put_item: Callable[..., Any]
     get_item: Callable[..., dict[str, Any]]
@@ -29,10 +31,27 @@ class DummyAdapter:
         self.query = lambda **_: {"Items": []}
 
 
+VALID_METADATA = {
+    "image_id": "img_1",
+    "user_id": "u1",
+    "file_hash": "hash123",
+}
+
+
 class TestDynamoDBMetadata:
+    # ------------------------------------------------------------------
+    # create_metadata
+    # ------------------------------------------------------------------
+
     def test_create_metadata_success(self) -> None:
         repo = DynamoDBMetadata(DummyAdapter())
-        repo.create_metadata(metadata={"image_id": "img_1", "file_hash": "abc"})
+        repo.create_metadata(metadata=VALID_METADATA)
+
+    def test_create_metadata_missing_required_fields(self) -> None:
+        repo = DynamoDBMetadata(DummyAdapter())
+
+        with pytest.raises(ValueError):
+            repo.create_metadata(metadata={"image_id": "img_1"})
 
     def test_create_metadata_duplicate_raises_domain_error(self) -> None:
         def raise_duplicate(**_: Any) -> None:
@@ -46,9 +65,9 @@ class TestDynamoDBMetadata:
         repo = DynamoDBMetadata(adapter)
 
         with pytest.raises(DuplicateImageError):
-            repo.create_metadata(metadata={"image_id": "img_1", "file_hash": "abc"})
+            repo.create_metadata(metadata=VALID_METADATA)
 
-    def test_create_metadata_client_error_other_than_duplicate(self) -> None:
+    def test_create_metadata_other_client_error(self) -> None:
         def raise_client_error(**_: Any) -> None:
             raise ClientError(
                 {"Error": {"Code": "ProvisionedThroughputExceededException"}},
@@ -59,16 +78,20 @@ class TestDynamoDBMetadata:
         adapter.put_item = raise_client_error
         repo = DynamoDBMetadata(adapter)
 
-        with pytest.raises(MetadataOperationFailedError):
-            repo.create_metadata(metadata={"image_id": "img_1"})
+        with pytest.raises(DynamoDBError):
+            repo.create_metadata(metadata=VALID_METADATA)
 
     def test_create_metadata_unexpected_exception(self) -> None:
         adapter = DummyAdapter()
         adapter.put_item = lambda **_: (_ for _ in ()).throw(Exception("boom"))
         repo = DynamoDBMetadata(adapter)
 
-        with pytest.raises(MetadataOperationFailedError):
-            repo.create_metadata(metadata={"image_id": "img_1"})
+        with pytest.raises(DynamoDBError):
+            repo.create_metadata(metadata=VALID_METADATA)
+
+    # ------------------------------------------------------------------
+    # fetch_metadata
+    # ------------------------------------------------------------------
 
     def test_fetch_metadata_found(self) -> None:
         adapter = DummyAdapter()
@@ -98,7 +121,7 @@ class TestDynamoDBMetadata:
         adapter.get_item = raise_client_error
         repo = DynamoDBMetadata(adapter)
 
-        with pytest.raises(MetadataOperationFailedError):
+        with pytest.raises(DynamoDBError):
             repo.fetch_metadata(image_id="img_1")
 
     def test_fetch_metadata_unexpected_exception(self) -> None:
@@ -106,8 +129,12 @@ class TestDynamoDBMetadata:
         adapter.get_item = lambda **_: (_ for _ in ()).throw(Exception("boom"))
         repo = DynamoDBMetadata(adapter)
 
-        with pytest.raises(MetadataOperationFailedError):
+        with pytest.raises(DynamoDBError):
             repo.fetch_metadata(image_id="img_1")
+
+    # ------------------------------------------------------------------
+    # remove_metadata
+    # ------------------------------------------------------------------
 
     def test_remove_metadata_success(self) -> None:
         repo = DynamoDBMetadata(DummyAdapter())
@@ -124,7 +151,7 @@ class TestDynamoDBMetadata:
         adapter.delete_item = raise_client_error
         repo = DynamoDBMetadata(adapter)
 
-        with pytest.raises(MetadataOperationFailedError):
+        with pytest.raises(DynamoDBError):
             repo.remove_metadata(image_id="img_1")
 
     def test_remove_metadata_unexpected_exception(self) -> None:
@@ -132,8 +159,12 @@ class TestDynamoDBMetadata:
         adapter.delete_item = lambda **_: (_ for _ in ()).throw(Exception("boom"))
         repo = DynamoDBMetadata(adapter)
 
-        with pytest.raises(MetadataOperationFailedError):
+        with pytest.raises(DynamoDBError):
             repo.remove_metadata(image_id="img_1")
+
+    # ------------------------------------------------------------------
+    # list_user_images
+    # ------------------------------------------------------------------
 
     def test_list_user_images_invalid_limit(self) -> None:
         repo = DynamoDBMetadata(DummyAdapter())
@@ -156,8 +187,8 @@ class TestDynamoDBMetadata:
         adapter = DummyAdapter()
         adapter.query = lambda **_: {
             "Items": [
-                {"image_id": "img_1", "user_id": "u1"},
-                {"image_id": "img_2", "user_id": "u1"},
+                {"image_id": "img_1"},
+                {"image_id": "img_2"},
             ]
         }
         repo = DynamoDBMetadata(adapter)
@@ -176,7 +207,7 @@ class TestDynamoDBMetadata:
         adapter.query = raise_client_error
         repo = DynamoDBMetadata(adapter)
 
-        with pytest.raises(MetadataOperationFailedError):
+        with pytest.raises(DynamoDBError):
             repo.list_user_images(user_id="u1", limit=10)
 
     def test_list_user_images_unexpected_exception(self) -> None:
@@ -184,8 +215,12 @@ class TestDynamoDBMetadata:
         adapter.query = lambda **_: (_ for _ in ()).throw(Exception("boom"))
         repo = DynamoDBMetadata(adapter)
 
-        with pytest.raises(MetadataOperationFailedError):
+        with pytest.raises(DynamoDBError):
             repo.list_user_images(user_id="u1", limit=10)
+
+    # ------------------------------------------------------------------
+    # check_duplicate_image
+    # ------------------------------------------------------------------
 
     def test_check_duplicate_image_true(self) -> None:
         adapter = DummyAdapter()
@@ -198,7 +233,7 @@ class TestDynamoDBMetadata:
         repo = DynamoDBMetadata(DummyAdapter())
         assert repo.check_duplicate_image(user_id="u1", file_hash="abc") is False
 
-    def test_check_duplicate_image_client_error_returns_false(self) -> None:
+    def test_check_duplicate_image_client_error_raises(self) -> None:
         def raise_client_error(**_: Any) -> dict[str, Any]:
             raise ClientError(
                 {"Error": {"Code": "InternalError"}},
@@ -209,12 +244,13 @@ class TestDynamoDBMetadata:
         adapter.query = raise_client_error
         repo = DynamoDBMetadata(adapter)
 
-        assert repo.check_duplicate_image(user_id="u1", file_hash="abc") is False
+        with pytest.raises(DynamoDBError):
+            repo.check_duplicate_image(user_id="u1", file_hash="abc")
 
     def test_check_duplicate_image_unexpected_exception_raises(self) -> None:
         adapter = DummyAdapter()
         adapter.query = lambda **_: (_ for _ in ()).throw(Exception("boom"))
         repo = DynamoDBMetadata(adapter)
 
-        with pytest.raises(MetadataOperationFailedError):
+        with pytest.raises(DynamoDBError):
             repo.check_duplicate_image(user_id="u1", file_hash="abc")

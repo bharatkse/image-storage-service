@@ -2,8 +2,6 @@
 Unit tests for core.models.errors
 """
 
-from typing import cast
-
 from core.models.errors import (
     DuplicateImageError,
     DynamoDBError,
@@ -35,20 +33,18 @@ class TestImageServiceError:
 class TestValidationError:
     def test_validation_error_defaults(self) -> None:
         err = ValidationError(message="Invalid input")
-        typed = cast(ValidationError, err)
 
-        assert typed.error_code == "VALIDATION_FAILED"
-        assert typed.details == {}
-        assert str(typed) == "Invalid input"
+        assert err.error_code == "VALIDATION_FAILED"
+        assert err.details == {}
+        assert str(err) == "Invalid input"
 
     def test_validation_error_with_details(self) -> None:
         err = ValidationError(
             message="Invalid value",
             details={"field": "image_id"},
         )
-        typed = cast(ValidationError, err)
 
-        assert typed.details == {"field": "image_id"}
+        assert err.details == {"field": "image_id"}
 
 
 class TestNotFoundError:
@@ -57,10 +53,9 @@ class TestNotFoundError:
             message="Image not found",
             details={"image_id": "img_123"},
         )
-        typed = cast(NotFoundError, err)
 
-        assert typed.error_code == "NOT_FOUND"
-        assert typed.details == {"image_id": "img_123"}
+        assert err.error_code == "NOT_FOUND"
+        assert err.details == {"image_id": "img_123"}
 
 
 class TestDuplicateImageError:
@@ -69,10 +64,9 @@ class TestDuplicateImageError:
             message="Duplicate image detected",
             details={"file_hash": "abc123"},
         )
-        typed = cast(DuplicateImageError, err)
 
-        assert typed.error_code == "DUPLICATE_IMAGE_ERROR"
-        assert typed.details["file_hash"] == "abc123"
+        assert err.error_code == "DUPLICATE_IMAGE_ERROR"
+        assert err.details["file_hash"] == "abc123"
 
 
 class TestMetadataOperationFailedError:
@@ -81,10 +75,9 @@ class TestMetadataOperationFailedError:
             message="Failed to save metadata",
             details={"image_id": "img_1"},
         )
-        typed = cast(MetadataOperationFailedError, err)
 
-        assert typed.error_code == "METADATA_OPERATION_FAILED"
-        assert typed.details["image_id"] == "img_1"
+        assert err.error_code == "METADATA_OPERATION_FAILED"
+        assert err.details["image_id"] == "img_1"
 
 
 class TestS3Error:
@@ -93,10 +86,9 @@ class TestS3Error:
             message="S3 operation failed",
             details={"operation": "upload"},
         )
-        typed = cast(S3Error, err)
 
-        assert typed.error_code == "S3_ERROR"
-        assert typed.details == {"operation": "upload"}
+        assert err.error_code == "S3_ERROR"
+        assert err.details == {"operation": "upload"}
 
 
 class TestDynamoDBError:
@@ -105,10 +97,9 @@ class TestDynamoDBError:
             message="DynamoDB query failed",
             details={"operation": "query"},
         )
-        typed = cast(DynamoDBError, err)
 
-        assert typed.error_code == "DYNAMODB_ERROR"
-        assert typed.details == {"operation": "query"}
+        assert err.error_code == "DYNAMODB_ERROR"
+        assert err.details == {"operation": "query"}
 
 
 class TestFilterError:
@@ -117,10 +108,9 @@ class TestFilterError:
             message="Invalid filter",
             details={"filter": "date"},
         )
-        typed = cast(FilterError, err)
 
-        assert typed.error_code == "INVALID_FILTER"
-        assert typed.details == {"filter": "date"}
+        assert err.error_code == "INVALID_FILTER"
+        assert err.details == {"filter": "date"}
 
 
 class TestMIMETypeError:
@@ -129,10 +119,9 @@ class TestMIMETypeError:
             message="Unsupported MIME type",
             details={"mime_type": "application/xml"},
         )
-        typed = cast(MIMETypeError, err)
 
-        assert typed.error_code == "UNSUPPORTED_MIME_TYPE"
-        assert typed.details["mime_type"] == "application/xml"
+        assert err.error_code == "UNSUPPORTED_MIME_TYPE"
+        assert err.details["mime_type"] == "application/xml"
 
 
 class TestFileSizeError:
@@ -141,8 +130,7 @@ class TestFileSizeError:
             message="File size exceeded",
             details={"size": 10_000, "max_size": 5_000},
         )
-        typed = cast(FileSizeError, err)
 
-        assert typed.error_code == "FILE_SIZE_EXCEEDED"
-        assert typed.details["size"] == 10_000
-        assert typed.details["max_size"] == 5_000
+        assert err.error_code == "FILE_SIZE_EXCEEDED"
+        assert err.details["size"] == 10_000
+        assert err.details["max_size"] == 5_000

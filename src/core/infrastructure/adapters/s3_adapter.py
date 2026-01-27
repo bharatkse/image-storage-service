@@ -1,7 +1,7 @@
 """Thin adapter for interacting with Amazon S3."""
 
 import os
-from typing import Any, cast
+from typing import Any, Protocol, cast
 
 import boto3
 from botocore.client import BaseClient
@@ -11,6 +11,31 @@ from core.utils.constants import (
     ENV_AWS_REGION,
     ENV_IMAGE_S3_BUCKET_NAME,
 )
+
+
+class S3AdapterProtocol(Protocol):
+    """Minimal S3 adapter protocol (repository-facing)."""
+
+    def put_object(
+        self,
+        *,
+        key: str,
+        body: bytes,
+        content_type: str,
+        metadata: dict[str, str],
+    ) -> None: ...
+
+    def get_object(self, *, key: str) -> dict[str, Any]: ...
+
+    def delete_object(self, *, key: str) -> None: ...
+
+    def generate_presigned_url(
+        self,
+        *,
+        method: str,
+        params: dict[str, Any],
+        expires_in: int,
+    ) -> str: ...
 
 
 class S3Adapter:

@@ -6,11 +6,12 @@ from typing import Any
 
 from aws_lambda_powertools import Logger, Metrics, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from pydantic import ValidationError
 
 from core.models.image import ImageMetadata, ListImagesResponse
 from core.models.pagination import PaginationInfo
 from core.utils.response import ResponseBuilder
-from core.utils.validators import validate_request
+from core.utils.validators import sanitize_validation_errors, validate_request
 
 from .models import ListImagesRequest
 from .service import ListService
@@ -22,7 +23,7 @@ metrics = Metrics()
 
 @tracer.capture_lambda_handler
 @metrics.log_metrics()
-def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
+def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
     """
     Handle requests to list images.
 
@@ -30,15 +31,33 @@ def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
     - Filtering by creation date (DynamoDB-level)
     - Filtering by image name substring (in-memory)
     - Sorting and offset-based pagination
+
+    Args:
+        event: API Gateway Lambda proxy event
+        context: AWS Lambda execution context
+
+    Returns:
+        API Gateway-compatible HTTP response
+
     """
 
     params = event.get("queryStringParameters") or {}
 
-    is_valid, result = validate_request(ListImagesRequest, params)
-    if not is_valid:
-        return result
+    try:
+        request = validate_request(
+            ListImagesRequest,
+            params,
+        )
+    except ValidationError as exc:
+        logger.error(
+            "Request validation failed",
+            extra={"errors": exc.errors()},
+        )
+        return ResponseBuilder.validation_error(
+            message="Invalid request params",
+            details={"errors": sanitize_validation_errors(exc.errors())},
+        )
 
-    request: ListImagesRequest = result
     service = ListService()
 
     try:

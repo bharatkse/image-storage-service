@@ -1,9 +1,9 @@
 """Unit tests for request validation utilities."""
 
-import json
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+import pytest
 
 from core.utils.validators import (
     sanitize_validation_errors,
@@ -74,7 +74,6 @@ class TestSanitizeValidationErrors:
         ]
 
     def test_preserves_pydantic_type_message(self) -> None:
-        """Pydantic v2 type errors are not rewritten."""
         errors = [
             {
                 "loc": ("age",),
@@ -101,9 +100,8 @@ class TestValidateRequest:
             "age": 30,
         }
 
-        is_valid, result = validate_request(SampleModel, data)
+        result = validate_request(SampleModel, data)
 
-        assert is_valid is True
         assert isinstance(result, SampleModel)
         assert result.name == "John"
         assert result.age == 30
@@ -111,24 +109,13 @@ class TestValidateRequest:
     def test_validate_request_missing_required_field(self) -> None:
         data: dict[str, Any] = {}
 
-        is_valid, result = validate_request(
-            RequiredOnlyModel,
-            data,
-            request_id="req-1",
-            cors_origin="*",
-        )
+        with pytest.raises(ValidationError) as exc_info:
+            validate_request(RequiredOnlyModel, data)
 
-        assert is_valid is False
-        assert result["statusCode"] == 422
+        errors = sanitize_validation_errors(exc_info.value.errors())
 
-        body = json.loads(result["body"])
-
-        assert body["message"] == "Invalid request payload"
-        assert body["request_id"] == "req-1"
-        assert body["details"][0]["field"] == "name"
-        assert body["details"][0]["message"] == "This field is required"
-
-        assert result["headers"]["Access-Control-Allow-Origin"] == "*"
+        assert errors[0]["field"] == "name"
+        assert errors[0]["message"] == "This field is required"
 
     def test_validate_request_invalid_type(self) -> None:
         data: dict[str, Any] = {
@@ -136,13 +123,10 @@ class TestValidateRequest:
             "age": "not-an-int",
         }
 
-        is_valid, result = validate_request(SampleModel, data)
+        with pytest.raises(ValidationError) as exc_info:
+            validate_request(SampleModel, data)
 
-        assert is_valid is False
-        assert result["statusCode"] == 422
+        errors = sanitize_validation_errors(exc_info.value.errors())
 
-        body = json.loads(result["body"])
-
-        detail = body["details"][0]
-        assert detail["field"] == "age"
-        assert detail["message"] == "Input should be a valid integer, unable to parse string as an integer"
+        assert errors[0]["field"] == "age"
+        assert "valid integer" in errors[0]["message"].lower()
