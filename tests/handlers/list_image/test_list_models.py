@@ -2,8 +2,8 @@
 Unit tests for ListImagesRequest
 """
 
-import pytest
 from pydantic import ValidationError
+import pytest
 
 from core.utils.constants import DEFAULT_LIMIT, DEFAULT_OFFSET
 from handlers.list_image.models import ListImagesRequest

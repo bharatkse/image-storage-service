@@ -4179,6 +4179,21 @@ workspaces-web = ["types-boto3-workspaces-web (>=1.42.0,<1.43.0)"]
 xray = ["types-boto3-xray (>=1.42.0,<1.43.0)"]
 
 [[package]]
+name = "types-requests"
+version = "2.32.4.20260107"
+description = "Typing stubs for requests"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "types_requests-2.32.4.20260107-py3-none-any.whl", hash = "sha256:b703fe72f8ce5b31ef031264fe9395cac8f46a04661a79f7ed31a80fb308730d"},
+    {file = "types_requests-2.32.4.20260107.tar.gz", hash = "sha256:018a11ac158f801bfa84857ddec1650750e393df8a004a8a9ae2a9bec6fcb24f"},
+]
+
+[package.dependencies]
+urllib3 = ">=2"
+
+[[package]]
 name = "types-s3transfer"
 version = "0.16.0"
 description = "Type annotations and code completion for s3transfer"
@@ -4557,4 +4572,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "f3253e81b856bca5afbff954e4cca751799e9ffb2e85e53e331ef65268aed6d8"
+content-hash = "d2f5aed30bc050e1f0076668f68cbc6f5badf1d46234bddf86e4403864246dd6"

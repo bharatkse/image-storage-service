@@ -80,6 +80,8 @@ repos:
       - id: mypy
         args: [--ignore-missing-imports]
         exclude: ^(\.aws-sam|localstack-data)/
+        additional_dependencies:
+          - types-requests
 
   # ----------------------------------------
   # codespell: spelling mistakes

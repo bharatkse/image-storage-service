@@ -2,8 +2,8 @@
 Lambda handler responsible for image upload and metadata creation.
 """
 
-import json
 from http import HTTPStatus
+import json
 from typing import Any
 
 from aws_lambda_powertools import Logger, Metrics, Tracer
@@ -108,9 +108,7 @@ def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
             "Unexpected error occurred while uploading image",
             extra={"user_id": request.user_id},
         )
-        return ResponseBuilder.internal_error(
-            "Unexpected error occurred while uploading image"
-        )
+        return ResponseBuilder.internal_error("Unexpected error occurred while uploading image")
 
     response = ImageUploadResponse(
         image_id=metadata["image_id"],

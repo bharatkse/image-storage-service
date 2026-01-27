@@ -41,9 +41,7 @@ class TestUploadService:
 
         with (
             patch.object(service.metadata, "check_duplicate_image", return_value=False),
-            patch.object(
-                service.storage, "upload_image", return_value="images/u/img.png"
-            ),
+            patch.object(service.storage, "upload_image", return_value="images/u/img.png"),
             patch.object(service.metadata, "create_metadata"),
         ):
             result = service.upload_image(
@@ -128,9 +126,7 @@ class TestUploadService:
 
         with (
             patch.object(service.metadata, "check_duplicate_image", return_value=False),
-            patch.object(
-                service.storage, "upload_image", return_value="images/u/img.png"
-            ),
+            patch.object(service.storage, "upload_image", return_value="images/u/img.png"),
             patch.object(
                 service.metadata,
                 "create_metadata",
@@ -153,9 +149,7 @@ class TestUploadService:
 
         with (
             patch.object(service.metadata, "check_duplicate_image", return_value=False),
-            patch.object(
-                service.storage, "upload_image", return_value="images/u/img.png"
-            ),
+            patch.object(service.storage, "upload_image", return_value="images/u/img.png"),
             patch.object(
                 service.metadata,
                 "create_metadata",

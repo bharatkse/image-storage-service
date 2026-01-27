@@ -1,7 +1,7 @@
 """Unit tests for ImageMetadata and ListImagesResponse models."""
 
-import pytest
 from pydantic import ValidationError
+import pytest
 
 from core.models.image import ImageMetadata, ListImagesResponse
 from core.models.pagination import PaginationInfo

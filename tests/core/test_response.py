@@ -1,6 +1,6 @@
 import base64
-import json
 from http import HTTPStatus
+import json
 from types import SimpleNamespace
 from typing import Any, cast
 
@@ -72,10 +72,7 @@ def test_default_error_messages() -> None:
     assert parse_body(ResponseBuilder.unauthorized())["message"] == "Unauthorized"
     assert parse_body(ResponseBuilder.forbidden())["message"] == "Forbidden"
     assert parse_body(ResponseBuilder.not_found())["message"] == "Resource not found"
-    assert (
-        parse_body(ResponseBuilder.internal_error())["message"]
-        == "Internal server error"
-    )
+    assert parse_body(ResponseBuilder.internal_error())["message"] == "Internal server error"
 
 
 def test_validation_error() -> None:

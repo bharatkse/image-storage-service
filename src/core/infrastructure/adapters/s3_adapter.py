@@ -26,9 +26,7 @@ class S3Adapter:
         """Create S3 client from environment configuration."""
         bucket_name = os.getenv(ENV_IMAGE_S3_BUCKET_NAME)
         if not bucket_name:
-            raise RuntimeError(
-                f"{ENV_IMAGE_S3_BUCKET_NAME} environment variable is not set"
-            )
+            raise RuntimeError(f"{ENV_IMAGE_S3_BUCKET_NAME} environment variable is not set")
 
         self._bucket = bucket_name
         self._client: BaseClient = boto3.client(

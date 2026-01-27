@@ -2,8 +2,8 @@ import json
 from typing import Any
 from unittest.mock import patch
 
-import pytest
 from botocore.exceptions import ClientError
+import pytest
 
 from handlers.delete_image.handler import handler
 
@@ -42,9 +42,7 @@ class TestDeleteImageHandler:
         assert "deleted_at" in body
 
         # metadata deleted
-        assert (
-            dynamodb_table.get_item(Key={"image_id": "img_abc123"}).get("Item") is None
-        )
+        assert dynamodb_table.get_item(Key={"image_id": "img_abc123"}).get("Item") is None
 
         # s3 object deleted
         with pytest.raises(ClientError):

@@ -1,5 +1,5 @@
-import pytest
 from botocore.exceptions import ClientError
+import pytest
 
 from core.infrastructure.adapters.s3_adapter import S3Adapter
 from core.utils.constants import ENV_IMAGE_S3_BUCKET_NAME

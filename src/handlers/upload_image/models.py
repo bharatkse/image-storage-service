@@ -25,12 +25,8 @@ class ImageUploadRequest(BaseModel):
         pattern=USER_ID_PATTERN,
         description="User identifier (alphanumeric, underscore, hyphen)",
     )
-    image_name: str = Field(
-        ..., min_length=1, max_length=255, description="Image filename"
-    )
-    description: str | None = Field(
-        None, max_length=1000, description="Image description"
-    )
+    image_name: str = Field(..., min_length=1, max_length=255, description="Image filename")
+    description: str | None = Field(None, max_length=1000, description="Image description")
     tags: list[str] | None = Field(None, description="List of tags (max 10)")
 
     @field_validator("tags", mode="before")
@@ -76,8 +72,7 @@ class ImageUploadRequest(BaseModel):
 
         if suffix not in ALLOWED_EXTENSIONS:
             raise ValueError(
-                f"Invalid image extension '{suffix}'. "
-                f"Allowed extensions: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+                f"Invalid image extension '{suffix}'. " f"Allowed extensions: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
             )
 
         return value
@@ -107,9 +102,7 @@ class ImageUploadRequest(BaseModel):
 
         if len(file_data) > MAX_FILE_SIZE:
             logger.error("File size validation error: File size exceeds limit")
-            raise ValueError(
-                f"File size exceeds {MAX_FILE_SIZE // (1024 * 1024)}MB limit"
-            )
+            raise ValueError(f"File size exceeds {MAX_FILE_SIZE // (1024 * 1024)}MB limit")
 
         return value
 

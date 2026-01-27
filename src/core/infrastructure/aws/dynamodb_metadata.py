@@ -58,10 +58,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
         except ClientError as exc:
             logger.error("DynamoDB put_item failed", extra={"image_id": image_id})
 
-            if (
-                exc.response.get("Error", {}).get("Code")
-                == "ConditionalCheckFailedException"
-            ):
+            if exc.response.get("Error", {}).get("Code") == "ConditionalCheckFailedException":
                 raise DuplicateImageError(
                     message="This image already exists",
                     details={"image_id": image_id},
@@ -268,9 +265,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
         try:
             response = self._db.query(
                 IndexName="user-filehash-index",
-                KeyConditionExpression=(
-                    Key("user_id").eq(user_id) & Key("file_hash").eq(file_hash)
-                ),
+                KeyConditionExpression=(Key("user_id").eq(user_id) & Key("file_hash").eq(file_hash)),
                 Limit=1,
             )
 

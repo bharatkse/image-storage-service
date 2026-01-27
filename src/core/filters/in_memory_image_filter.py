@@ -90,7 +90,5 @@ class InMemoryImageFilter:
             )
             raise ValueError(error_message)
 
-        paginated_items, total_count, has_more = self._pagination.paginate(
-            items, offset, limit
-        )
+        paginated_items, total_count, has_more = self._pagination.paginate(items, offset, limit)
         return paginated_items, total_count, has_more

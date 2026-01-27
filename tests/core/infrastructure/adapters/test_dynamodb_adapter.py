@@ -1,5 +1,5 @@
-import pytest
 from botocore.exceptions import ClientError
+import pytest
 
 from core.infrastructure.adapters.dynamodb_adapter import DynamoDBAdapter
 from core.utils.constants import ENV_IMAGE_METADATA_TABLE_NAME

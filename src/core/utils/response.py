@@ -5,10 +5,10 @@ Centralized API response builder for AWS Lambda / API Gateway.
 from __future__ import annotations
 
 import base64
-import json
 from collections.abc import Callable
 from functools import wraps
 from http import HTTPStatus
+import json
 from typing import Any, Protocol
 
 from core.utils.constants import (
@@ -274,18 +274,12 @@ def handle_exception(
     cors_origin: str | None = None,
 ) -> JsonDict:
     if isinstance(exc, ValueError):
-        return ResponseBuilder.bad_request(
-            str(exc), request_id=request_id, cors_origin=cors_origin
-        )
+        return ResponseBuilder.bad_request(str(exc), request_id=request_id, cors_origin=cors_origin)
 
     if isinstance(exc, PermissionError):
-        return ResponseBuilder.forbidden(
-            str(exc), request_id=request_id, cors_origin=cors_origin
-        )
+        return ResponseBuilder.forbidden(str(exc), request_id=request_id, cors_origin=cors_origin)
 
-    return ResponseBuilder.internal_error(
-        str(exc), request_id=request_id, cors_origin=cors_origin
-    )
+    return ResponseBuilder.internal_error(str(exc), request_id=request_id, cors_origin=cors_origin)
 
 
 def api_handler(func: LambdaHandler) -> Callable[..., JsonDict]:

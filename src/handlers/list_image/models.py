@@ -91,9 +91,7 @@ class ListImagesRequest(BaseModel):
 
             return normalized.isoformat()
         except ValueError as exc:
-            raise ValueError(
-                f"Invalid date format. Expected YYYY-MM-DD, got '{value}'"
-            ) from exc
+            raise ValueError(f"Invalid date format. Expected YYYY-MM-DD, got '{value}'") from exc
 
     @field_validator("end_date")
     @classmethod
@@ -123,9 +121,7 @@ class ListImagesRequest(BaseModel):
 
             return normalized.isoformat()
         except ValueError as exc:
-            raise ValueError(
-                f"Invalid date format. Expected YYYY-MM-DD, got '{value}'"
-            ) from exc
+            raise ValueError(f"Invalid date format. Expected YYYY-MM-DD, got '{value}'") from exc
 
     @model_validator(mode="after")
     def validate_date_range(self) -> "ListImagesRequest":

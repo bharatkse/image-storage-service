@@ -1,5 +1,5 @@
-import pytest
 from botocore.exceptions import ClientError
+import pytest
 
 from core.models.errors import (
     MetadataOperationFailedError,

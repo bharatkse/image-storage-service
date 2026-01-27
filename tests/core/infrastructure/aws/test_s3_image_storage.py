@@ -2,8 +2,8 @@
 
 from typing import Any
 
-import pytest
 from botocore.exceptions import ClientError
+import pytest
 
 from core.infrastructure.aws.s3_image_storage import S3ImageStorage
 from core.models.errors import (

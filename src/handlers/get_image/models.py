@@ -27,9 +27,7 @@ class GetImageRequest(BaseModel):
     download: StrictBool = Field(
         default=False,
         description=(
-            "If true, forces image download "
-            "(Content-Disposition: attachment). "
-            "If false, displays image inline."
+            "If true, forces image download " "(Content-Disposition: attachment). " "If false, displays image inline."
         ),
     )
 

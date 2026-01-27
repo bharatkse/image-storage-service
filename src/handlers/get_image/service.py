@@ -98,9 +98,7 @@ class GetService:
             url = self.storage.generate_presigned_get_url(
                 key=s3_key,
                 expires_in=expires_in,
-                content_disposition=(
-                    f'{disposition}; filename="{metadata.get("image_name", "image")}"'
-                ),
+                content_disposition=(f'{disposition}; filename="{metadata.get("image_name", "image")}"'),
             )
             if IS_LOCALSTACK:
                 url = self._rewrite_localstack_url(url)

@@ -1,7 +1,7 @@
 """Unit tests for PaginationInfo model."""
 
-import pytest
 from pydantic import ValidationError
+import pytest
 
 from core.models.pagination import PaginationInfo
 

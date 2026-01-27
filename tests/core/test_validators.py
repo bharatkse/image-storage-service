@@ -145,7 +145,4 @@ class TestValidateRequest:
 
         detail = body["details"][0]
         assert detail["field"] == "age"
-        assert (
-            detail["message"]
-            == "Input should be a valid integer, unable to parse string as an integer"
-        )
+        assert detail["message"] == "Input should be a valid integer, unable to parse string as an integer"

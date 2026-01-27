@@ -34,9 +34,7 @@ class DynamoDBAdapter:
         """Initialize DynamoDB table from environment."""
         table_name = os.getenv(ENV_IMAGE_METADATA_TABLE_NAME)
         if not table_name:
-            raise RuntimeError(
-                f"{ENV_IMAGE_METADATA_TABLE_NAME} environment variable is not set"
-            )
+            raise RuntimeError(f"{ENV_IMAGE_METADATA_TABLE_NAME} environment variable is not set")
 
         dynamodb = boto3.resource(
             "dynamodb",

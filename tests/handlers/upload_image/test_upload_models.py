@@ -2,8 +2,8 @@
 
 import base64
 
-import pytest
 from pydantic import ValidationError
+import pytest
 
 from handlers.upload_image.models import ImageUploadRequest
 

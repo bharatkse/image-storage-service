@@ -6,8 +6,8 @@ for image uploads while translating failures into domain-specific errors.
 
 import base64
 import hashlib
-import uuid
 from typing import Any
+import uuid
 
 from aws_lambda_powertools import Logger
 
