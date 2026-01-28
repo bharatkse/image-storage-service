@@ -6,14 +6,16 @@ from typing import Any, Literal
 
 from aws_lambda_powertools import Logger, Metrics, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from pydantic import ValidationError
 
 from core.models.errors import (
     MetadataOperationFailedError,
     NotFoundError,
     S3Error,
 )
+from core.utils.decorators import api_gateway_handler
 from core.utils.response import ResponseBuilder
-from core.utils.validators import validate_request
+from core.utils.validators import sanitize_validation_errors, validate_request
 
 from .models import GetImageRequest, ImageMetadataHeader
 from .service import GetService
@@ -23,16 +25,37 @@ tracer = Tracer()
 metrics = Metrics()
 
 
+@api_gateway_handler
 @tracer.capture_lambda_handler
 @metrics.log_metrics()
-def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
+def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
     """
     Handle image view or download requests.
 
-    - Default: return view URL
-    - download=true: return download URL
-    - metadata=true: include metadata in response
+    This function:
+     - Default: return view URL
+        - download=true: return download URL
+        - metadata=true: include metadata in response
+    Args:
+        event: API Gateway event payload.
+        context: AWS Lambda runtime context.
+
+    Returns:
+        API Gateway-compatible response dictionary.
     """
+    logger.info(
+        "Received image view/download request",
+        extra={
+            "http_method": event.get("httpMethod"),
+            "path": event.get("path"),
+            "query_params": event.get("queryStringParameters"),
+            "request_id": getattr(context, "aws_request_id", None),
+            "function_name": getattr(context, "function_name", None),
+            "remaining_time_ms": context.get_remaining_time_in_millis()
+            if hasattr(context, "get_remaining_time_in_millis")
+            else None,
+        },
+    )
 
     path_params = event.get("pathParameters") or {}
     query_params = event.get("queryStringParameters") or {}
@@ -43,12 +66,21 @@ def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
         "download": query_params.get("download", "false").lower() == "true",
     }
 
-    is_valid, result = validate_request(GetImageRequest, params)
-    if not is_valid:
-        logger.error("Validation error: %s", result)
-        return result
+    try:
+        request = validate_request(
+            GetImageRequest,
+            params,
+        )
+    except ValidationError as exc:
+        logger.error(
+            "Request validation failed",
+            extra={"errors": exc.errors()},
+        )
+        return ResponseBuilder.bad_request(
+            message="Invalid request params",
+            details={"errors": sanitize_validation_errors([err for err in exc.errors()])},
+        )
 
-    request = result
     service = GetService()
 
     mode: Literal["view", "download"] = "download" if request.download else "view"
@@ -71,9 +103,6 @@ def handler(event: dict[str, Any], context: LambdaContext) -> ResponseBuilder:
             extra={"image_id": request.image_id},
         )
         return ResponseBuilder.internal_error(exc.message)
-    except Exception as exc:
-        logger.exception("Failed to generate image URL")
-        return ResponseBuilder.internal_error(str(exc))
 
     response_body: dict[str, Any] = {
         "image_id": request.image_id,

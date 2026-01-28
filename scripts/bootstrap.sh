@@ -11,12 +11,14 @@ PYTHON_VERSION="3.10.14"
 
 SKIP_PYTHON=false
 SKIP_DOCKER=false
+WRITE_PYTHON_VERSION=false
 CI_MODE=false
 
 for arg in "$@"; do
   case "$arg" in
     --skip-python) SKIP_PYTHON=true ;;
     --skip-docker) SKIP_DOCKER=true ;;
+    --write-python-version) WRITE_PYTHON_VERSION=true ;;
   esac
 done
 
@@ -122,6 +124,23 @@ install_python() {
   fi
 
   pyenv local "$PYTHON_VERSION"
+}
+
+# ============================================================================
+# .python-version
+# ============================================================================
+write_python_version_file() {
+  $WRITE_PYTHON_VERSION || return
+
+  if [ -f .python-version ]; then
+    if grep -qx "$PYTHON_VERSION" .python-version; then
+      log ".python-version already set to $PYTHON_VERSION"
+      return
+    fi
+  fi
+
+  log "Writing .python-version ($PYTHON_VERSION)"
+  echo "$PYTHON_VERSION" > .python-version
 }
 
 # ============================================================================
@@ -249,6 +268,7 @@ main() {
   install_system_deps
   install_pyenv
   install_python
+  write_python_version_file
   install_docker
   install_aws_cli
   install_poetry

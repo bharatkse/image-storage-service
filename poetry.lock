@@ -11,6 +11,7 @@ files = [
     {file = "annotated_types-0.7.0-py3-none-any.whl", hash = "sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53"},
     {file = "annotated_types-0.7.0.tar.gz", hash = "sha256:aff07c09a53a08bc8cfccb9c85b05f1aa9a2a6f23728d790723543408344ce89"},
 ]
+markers = {dev = "python_version < \"3.14\""}
 
 [[package]]
 name = "arrow"
@@ -19,6 +20,7 @@ description = "Better dates & times for Python"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "arrow-1.4.0-py3-none-any.whl", hash = "sha256:749f0769958ebdc79c173ff0b0670d59051a535fa26e8eba02953dc19eb43205"},
     {file = "arrow-1.4.0.tar.gz", hash = "sha256:ed0cc050e98001b8779e84d461b0098c4ac597e88704a655582b21d116e526d7"},
@@ -39,6 +41,7 @@ description = "Classes Without Boilerplate"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "attrs-25.4.0-py3-none-any.whl", hash = "sha256:adcf7e2a1fb3b36ac48d97835bb6d8ade15b8dcce26aba8bf1d14847b57a3373"},
     {file = "attrs-25.4.0.tar.gz", hash = "sha256:16d5969b87f0859ef33a48b35d55ac1be6e42ae49d5e853b597db70c35c57e11"},
@@ -51,6 +54,7 @@ description = "Python library to compile, build & package AWS Lambda functions f
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "aws_lambda_builders-1.61.0-py3-none-any.whl", hash = "sha256:04c275702f1718287de32af92f19c9206c1f29222adfdd8aa85efe3458e101cf"},
     {file = "aws_lambda_builders-1.61.0.tar.gz", hash = "sha256:29bfe6eac3c55677ed383687ab63aa31372576f537e6310b8af953cef6c787f4"},
@@ -97,6 +101,7 @@ description = "AWS SAM CLI is a CLI tool for local development and testing of Se
 optional = false
 python-versions = "!=4.0,<=4.0,>=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "aws_sam_cli-1.151.0-py3-none-any.whl", hash = "sha256:82fd924909e8844cff0723bed6f5f5590df5b5656a31fe446809b2126b9799a6"},
     {file = "aws_sam_cli-1.151.0.tar.gz", hash = "sha256:e3ad69a3f576e050b6f4c15d6e8d98a1b27f5e3fda37f1b42c0fcd0ffe99441c"},
@@ -138,6 +143,7 @@ description = "AWS SAM Translator is a library that transform SAM templates into
 optional = false
 python-versions = "!=4.0,<=4.0,>=3.8"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "aws_sam_translator-1.106.0-py3-none-any.whl", hash = "sha256:09e58160cdba3539dd37be209bc2accf51f8b71f8d4cc5431e248f794b122644"},
     {file = "aws_sam_translator-1.106.0.tar.gz", hash = "sha256:87712ced7eb6835fea2d4e9674ba7268494aa98f5b186ec5ad684245e2707ef7"},
@@ -170,18 +176,18 @@ wrapt = "*"
 
 [[package]]
 name = "awscli"
-version = "1.44.24"
+version = "1.44.25"
 description = "Universal Command Line Environment for AWS."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "awscli-1.44.24-py3-none-any.whl", hash = "sha256:48c76c4d88f041b30204c6ce2187ba223a088264418cfad8d348aad4aaad984f"},
-    {file = "awscli-1.44.24.tar.gz", hash = "sha256:e546857ab585127628d5545a03c3f377ee3ad249439d6960ec591d2c5d913c2a"},
+    {file = "awscli-1.44.25-py3-none-any.whl", hash = "sha256:3e988bb9e88dffa7f92ffd4c23b4fdd7832fb8c1174d076bbc8fc21403408413"},
+    {file = "awscli-1.44.25.tar.gz", hash = "sha256:6b4d1027d85b4e6d910aee31b7e1637a1d69940ace0f1336d1e85179c695184a"},
 ]
 
 [package.dependencies]
-botocore = "1.42.34"
+botocore = "1.42.35"
 colorama = ">=0.2.5,<0.4.7"
 docutils = ">=0.18.1,<=0.19"
 PyYAML = ">=3.10,<6.1"
@@ -195,6 +201,7 @@ description = "A common runtime for AWS Python projects"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "awscrt-0.29.2-cp310-cp310-macosx_10_15_universal2.whl", hash = "sha256:924bd4d81c8a64618b7493d9705868b8a04214e3004fa4c501af99c9cc02015d"},
     {file = "awscrt-0.29.2-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:2751af47cd24ecea59e8bab705bd709dd78e4b5bb585584264f0b615a3ab223f"},
@@ -248,6 +255,7 @@ description = "Ultra-lightweight pure Python package to check if a file is binar
 optional = false
 python-versions = "*"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "binaryornot-0.4.4-py2.py3-none-any.whl", hash = "sha256:b8b71173c917bddcd2c16070412e369c3ed7f0528926f70cac18a6c97fd563e4"},
     {file = "binaryornot-0.4.4.tar.gz", hash = "sha256:359501dfc9d40632edc9fac890e19542db1a287bbcfa58175b66658392018061"},
@@ -263,6 +271,7 @@ description = "Fast, simple object-to-object and broadcast signaling"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "blinker-1.9.0-py3-none-any.whl", hash = "sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc"},
     {file = "blinker-1.9.0.tar.gz", hash = "sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf"},
@@ -293,14 +302,15 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "boto3-stubs"
-version = "1.42.34"
-description = "Type annotations for boto3 1.42.34 generated with mypy-boto3-builder 8.12.0"
+version = "1.42.35"
+description = "Type annotations for boto3 1.42.35 generated with mypy-boto3-builder 8.12.0"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
-    {file = "boto3_stubs-1.42.34-py3-none-any.whl", hash = "sha256:eb98cf3cc0a74ed75ea4945152cf10da57c8c9628104a13db16cde10176219ab"},
-    {file = "boto3_stubs-1.42.34.tar.gz", hash = "sha256:fafcc3713c331bac11bf55fe913e5a3a01820f0cde640cfc4694df5a94aa9557"},
+    {file = "boto3_stubs-1.42.35-py3-none-any.whl", hash = "sha256:ae5a841e4d9d7afee5637e9bc90244a6f0515e494280926fe74fe08c113672ec"},
+    {file = "boto3_stubs-1.42.35.tar.gz", hash = "sha256:20aab5dee59d4d0a95152bd7be584faafb9f6bcf146ffff3cd6055f71d006d6a"},
 ]
 
 [package.dependencies]
@@ -375,7 +385,7 @@ bedrock-data-automation-runtime = ["mypy-boto3-bedrock-data-automation-runtime (
 bedrock-runtime = ["mypy-boto3-bedrock-runtime (>=1.42.0,<1.43.0)"]
 billing = ["mypy-boto3-billing (>=1.42.0,<1.43.0)"]
 billingconductor = ["mypy-boto3-billingconductor (>=1.42.0,<1.43.0)"]
-boto3 = ["boto3 (==1.42.34)"]
+boto3 = ["boto3 (==1.42.35)"]
 braket = ["mypy-boto3-braket (>=1.42.0,<1.43.0)"]
 budgets = ["mypy-boto3-budgets (>=1.42.0,<1.43.0)"]
 ce = ["mypy-boto3-ce (>=1.42.0,<1.43.0)"]
@@ -744,14 +754,14 @@ xray = ["mypy-boto3-xray (>=1.42.0,<1.43.0)"]
 
 [[package]]
 name = "botocore"
-version = "1.42.34"
+version = "1.42.35"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
 files = [
-    {file = "botocore-1.42.34-py3-none-any.whl", hash = "sha256:94099b5d09d0c4bfa6414fb3cffd54275ce6e51d7ba016f17a0e79f9274f68f7"},
-    {file = "botocore-1.42.34.tar.gz", hash = "sha256:92e44747da7890270d8dcc494ecc61fc315438440c55e00dc37a57d402b1bb66"},
+    {file = "botocore-1.42.35-py3-none-any.whl", hash = "sha256:b89f527987691abbd1374c4116cc2711471ce48e6da502db17e92b17b2af8d47"},
+    {file = "botocore-1.42.35.tar.gz", hash = "sha256:40a6e0f16afe9e5d42e956f0b6d909869793fadb21780e409063601fc3d094b8"},
 ]
 
 [package.dependencies]
@@ -765,14 +775,14 @@ crt = ["awscrt (==0.29.2)"]
 
 [[package]]
 name = "botocore-stubs"
-version = "1.42.34"
+version = "1.42.35"
 description = "Type annotations and code completion for botocore"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "botocore_stubs-1.42.34-py3-none-any.whl", hash = "sha256:afc08661122eff6939d88cd250084ac148e392f8a1a389d51a31a4b9dab59358"},
-    {file = "botocore_stubs-1.42.34.tar.gz", hash = "sha256:f3d1c5b45c2cbe16f63719abe639b23a1eeb3fec9c3ea0a72688585b462e8ce3"},
+    {file = "botocore_stubs-1.42.35-py3-none-any.whl", hash = "sha256:4d3389aa0a09c96f9aaabc2fb079768da0b2940430e39c270c992e1e36f8a54c"},
+    {file = "botocore_stubs-1.42.35.tar.gz", hash = "sha256:375cf9534f6f2a35bd2c9e7076e88fb49fb7d589c5aac129db6a9ffc13561cad"},
 ]
 
 [package.dependencies]
@@ -806,14 +816,14 @@ virtualenv = ["virtualenv (>=20.11) ; python_version < \"3.10\"", "virtualenv (>
 
 [[package]]
 name = "cachetools"
-version = "6.2.4"
+version = "6.2.5"
 description = "Extensible memoizing collections and decorators"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "cachetools-6.2.4-py3-none-any.whl", hash = "sha256:69a7a52634fed8b8bf6e24a050fb60bff1c9bd8f6d24572b99c32d4e71e62a51"},
-    {file = "cachetools-6.2.4.tar.gz", hash = "sha256:82c5c05585e70b6ba2d3ae09ea60b79548872185d2f24ae1f2709d37299fd607"},
+    {file = "cachetools-6.2.5-py3-none-any.whl", hash = "sha256:db3ae5465e90befb7c74720dd9308d77a09b7cf13433570e07caa0845c30d5fe"},
+    {file = "cachetools-6.2.5.tar.gz", hash = "sha256:6d8bfbba1ba94412fb9d9196c4da7a87e9d4928fffc5e93542965dca4740c77f"},
 ]
 
 [[package]]
@@ -945,6 +955,7 @@ description = "Checks CloudFormation templates for practices and behaviour that 
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "cfn_lint-1.43.4-py3-none-any.whl", hash = "sha256:c15e7013083c253afbc08b0e1ed056d7b6d8cf0fff9711af778b53a27d24dc5e"},
     {file = "cfn_lint-1.43.4.tar.gz", hash = "sha256:05021a9b9d2307860360d35e75558bc448f16b1e9a9279674ce457c3f7acef5b"},
@@ -972,6 +983,7 @@ description = "Universal encoding detector for Python 3"
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "chardet-5.2.0-py3-none-any.whl", hash = "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970"},
     {file = "chardet-5.2.0.tar.gz", hash = "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7"},
@@ -1107,6 +1119,7 @@ description = "Mustache templating language renderer"
 optional = false
 python-versions = "*"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "chevron-0.14.0-py3-none-any.whl", hash = "sha256:fbf996a709f8da2e745ef763f482ce2d311aa817d287593a5b990d6d6e4f0443"},
     {file = "chevron-0.14.0.tar.gz", hash = "sha256:87613aafdf6d77b6a90ff073165a61ae5086e21ad49057aa0e53681601800ebf"},
@@ -1146,6 +1159,7 @@ description = "A command-line utility that creates projects from project templat
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "cookiecutter-2.6.0-py3-none-any.whl", hash = "sha256:a54a8e37995e4ed963b3e82831072d1ad4b005af736bb17b99c2cbd9d41b6e2d"},
     {file = "cookiecutter-2.6.0.tar.gz", hash = "sha256:db21f8169ea4f4fdc2408d48ca44859349de2647fbe494a9d6c3edfc0542c21c"},
@@ -1354,6 +1368,7 @@ description = "Date parsing library designed to parse dates from HTML pages"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "dateparser-1.2.2-py3-none-any.whl", hash = "sha256:5a5d7211a09013499867547023a2a0c91d5a27d15dd4dbcea676ea9fe66f2482"},
     {file = "dateparser-1.2.2.tar.gz", hash = "sha256:986316f17cb8cdc23ea8ce563027c5ef12fc725b6fb1d137c14ca08777c5ecf7"},
@@ -1437,6 +1452,7 @@ description = "A Python library for the Docker Engine API."
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "docker-7.1.0-py3-none-any.whl", hash = "sha256:c96b93b7f0a746f9e77d325bcfb87422a3d8bd4f03136ae8a85b37f1898d5fc0"},
     {file = "docker-7.1.0.tar.gz", hash = "sha256:ad8c70e6e3f8926cb8a92619b832b4ea5299e2831c14284663184e200546fa6c"},
@@ -1522,6 +1538,7 @@ description = "A simple framework for building complex web applications."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "flask-3.1.2-py3-none-any.whl", hash = "sha256:ca1d8112ec8a6158cc29ea4858963350011b5c846a414cdb7a954aa9e967d03c"},
     {file = "flask-3.1.2.tar.gz", hash = "sha256:bf656c15c80190ed628ad08cdfd3aaa35beb087855e2f494910aa3774cc4fd87"},
@@ -1613,6 +1630,7 @@ description = "Safely pass data to untrusted environments and back."
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "itsdangerous-2.2.0-py3-none-any.whl", hash = "sha256:c6242fc49e35958c8b15141343aa660db5fc54d4f13a1db01a3f5891b98700ef"},
     {file = "itsdangerous-2.2.0.tar.gz", hash = "sha256:e0050c0b7da1eea53ffaf149c0cfbb5c6e2e2b69c4bef22c81fa6eb73e5f6173"},
@@ -1655,6 +1673,7 @@ description = "Apply JSON-Patches (RFC 6902)"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "jsonpatch-1.33-py2.py3-none-any.whl", hash = "sha256:0ae28c0cd062bbd8b8ecc26d7d164fbbea9652a1a3693f3b956c1eae5145dade"},
     {file = "jsonpatch-1.33.tar.gz", hash = "sha256:9fcd4009c41e6d12348b4a0ff2563ba56a2923a7dfee731d004e212e1ee5030c"},
@@ -1670,6 +1689,7 @@ description = "Identify specific nodes in a JSON document (RFC 6901)"
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "jsonpointer-3.0.0-py2.py3-none-any.whl", hash = "sha256:13e088adc14fca8b6aa8177c044e12701e6ad4b28ff10e65f2267a90109c9942"},
     {file = "jsonpointer-3.0.0.tar.gz", hash = "sha256:2b2d729f2091522d61c3b31f82e11870f60b68f43fbc705cb76bf4b832af59ef"},
@@ -1682,6 +1702,7 @@ description = "An implementation of JSON Schema validation for Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "jsonschema-4.25.1-py3-none-any.whl", hash = "sha256:3fba0169e345c7175110351d456342c364814cfcf3b964ba4587f22915230a63"},
     {file = "jsonschema-4.25.1.tar.gz", hash = "sha256:e4a9655ce0da0c0b67a085847e00a3a51449e1157f4f75e9fb5aa545e122eb85"},
@@ -1704,6 +1725,7 @@ description = "The JSON Schema meta-schemas and vocabularies, exposed as a Regis
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "jsonschema_specifications-2025.9.1-py3-none-any.whl", hash = "sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe"},
     {file = "jsonschema_specifications-2025.9.1.tar.gz", hash = "sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d"},
@@ -2074,6 +2096,7 @@ description = "Python library for arbitrary-precision floating-point arithmetic"
 optional = false
 python-versions = "*"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mpmath-1.3.0-py3-none-any.whl", hash = "sha256:a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c"},
     {file = "mpmath-1.3.0.tar.gz", hash = "sha256:7a28eb2a9774d00c7bc92411c19a89209d5da7c4c9a9e227be8330a23a25b91f"},
@@ -2154,6 +2177,7 @@ description = "Type annotations for boto3 APIGateway 1.42.3 service generated wi
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_apigateway-1.42.3-py3-none-any.whl", hash = "sha256:4bd11ea6674929523101274bc49211600f19b12bd06224d30e44a934e096d569"},
     {file = "mypy_boto3_apigateway-1.42.3.tar.gz", hash = "sha256:25518ac7e542a04e04bd4af1b2616c757c2eea06a9aef6beab5c6bb129791030"},
@@ -2169,6 +2193,7 @@ description = "Type annotations for boto3 CloudFormation 1.42.3 service generate
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_cloudformation-1.42.3-py3-none-any.whl", hash = "sha256:d4c802dd78844f10e944143b9f40c2c1199ed5f57f3540ab7bfc2281ac5bcaf0"},
     {file = "mypy_boto3_cloudformation-1.42.3.tar.gz", hash = "sha256:3bd3849bc89a371d4c368691535b320244ba00579cddd63bb58b73f28d70e510"},
@@ -2199,6 +2224,7 @@ description = "Type annotations for boto3 ECR 1.42.13 service generated with myp
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_ecr-1.42.13-py3-none-any.whl", hash = "sha256:d59f87b2242bda05c86788aa7c766c3e9f47adf666c3bf2e6d83a0430e84b67f"},
     {file = "mypy_boto3_ecr-1.42.13.tar.gz", hash = "sha256:c551e0b4041702fdd3d519c1024e3b1661f5dfcc2f6a076f4b1520c143b4b3f0"},
@@ -2214,6 +2240,7 @@ description = "Type annotations for boto3 IAM 1.42.4 service generated with mypy
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_iam-1.42.4-py3-none-any.whl", hash = "sha256:670ffeff6dee7eaa7f6f77ddfee1eeec2ab968b381efeddd3ccfe6f9971ac198"},
     {file = "mypy_boto3_iam-1.42.4.tar.gz", hash = "sha256:41b17d55f44d31ca5ef0389579505e65f6e79fae0423b98ff2581e83f6284bc5"},
@@ -2229,6 +2256,7 @@ description = "Type annotations for boto3 Kinesis 1.42.3 service generated with 
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_kinesis-1.42.3-py3-none-any.whl", hash = "sha256:dd63e3e40451216904adf9b3d4e39ded8d8e0577a525e4a80ac2558ffbc6d20d"},
     {file = "mypy_boto3_kinesis-1.42.3.tar.gz", hash = "sha256:31e01b74aa9c312e73f2c3238ca7e7c34d0363b51d68431fea9575b73650525a"},
@@ -2244,6 +2272,7 @@ description = "Type annotations for boto3 Lambda 1.42.8 service generated with m
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_lambda-1.42.8-py3-none-any.whl", hash = "sha256:fbb6646138520c675a4c4adff334e830b010d5c077dee8d5187346809ebb6f72"},
     {file = "mypy_boto3_lambda-1.42.8.tar.gz", hash = "sha256:55deadbfaf0e5f118237831a84d35f48dc7164ce2bf7efdcb54f54aef4025602"},
@@ -2259,6 +2288,7 @@ description = "Type annotations for boto3 S3 1.42.21 service generated with mypy
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_s3-1.42.21-py3-none-any.whl", hash = "sha256:f5b7d1ed718ba5b00f67e95a9a38c6a021159d3071ea235e6cf496e584115ded"},
     {file = "mypy_boto3_s3-1.42.21.tar.gz", hash = "sha256:cab71c918aac7d98c4d742544c722e37d8e7178acb8bc88a0aead7b1035026d2"},
@@ -2274,6 +2304,7 @@ description = "Type annotations for boto3 Schemas 1.42.3 service generated with 
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_schemas-1.42.3-py3-none-any.whl", hash = "sha256:4890b3126982bc646021f69acf0fa764bb442c682785594309315353b1a9d5b8"},
     {file = "mypy_boto3_schemas-1.42.3.tar.gz", hash = "sha256:8aeeb96d4097e74c785512d258d5f0be913680e8ce8722719af856b4762fad22"},
@@ -2289,6 +2320,7 @@ description = "Type annotations for boto3 SecretsManager 1.42.8 service generate
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_secretsmanager-1.42.8-py3-none-any.whl", hash = "sha256:50c891a88e725a8dba7444018e47590ea63d8e938abe2b1c0b25e5413f39d51d"},
     {file = "mypy_boto3_secretsmanager-1.42.8.tar.gz", hash = "sha256:5ab42f35ce932765ebb1684146f478a87cc4b83bef950fd1aa0e268b88d59c81"},
@@ -2304,6 +2336,7 @@ description = "Type annotations for boto3 Signer 1.42.7 service generated with m
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_signer-1.42.7-py3-none-any.whl", hash = "sha256:5a48566374e1baa839fb0549976792b5cbda3583276494a4fdbc43befcdd9e8c"},
     {file = "mypy_boto3_signer-1.42.7.tar.gz", hash = "sha256:7c25f0193d4b2dfa0fdcda30175ffc3bfbd0ea31c0636ff08a467b6643209f5a"},
@@ -2319,6 +2352,7 @@ description = "Type annotations for boto3 SQS 1.42.3 service generated with mypy
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_sqs-1.42.3-py3-none-any.whl", hash = "sha256:a1f4ddf8f84112931a4814f0b5ff63e3ec026a07fbbc68e60bf15fa697dc214e"},
     {file = "mypy_boto3_sqs-1.42.3.tar.gz", hash = "sha256:699995b9a6f69a97c6d3e9126a76f06751e3b405640174fe7c20fe71d9ddc82a"},
@@ -2334,6 +2368,7 @@ description = "Type annotations for boto3 SFN 1.42.3 service generated with mypy
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_stepfunctions-1.42.3-py3-none-any.whl", hash = "sha256:1509c58b38389b05d0664e042e66508ea7cb170948cd92c33abe531e933f3c63"},
     {file = "mypy_boto3_stepfunctions-1.42.3.tar.gz", hash = "sha256:bf38f9db42e144e86c7807dff127554defe1548a10ba25824f69cc74554fa5b5"},
@@ -2349,6 +2384,7 @@ description = "Type annotations for boto3 STS 1.42.3 service generated with mypy
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_sts-1.42.3-py3-none-any.whl", hash = "sha256:0e02603e0867da61acfe4d01422ac1ea9687313036001ea89d4ee2fcd33d352d"},
     {file = "mypy_boto3_sts-1.42.3.tar.gz", hash = "sha256:3857c5ba3f3a5c0417edc47f5ad4e45891e3babc32d56c6b27c5d4167f9f5ba7"},
@@ -2364,6 +2400,7 @@ description = "Type annotations for boto3 XRay 1.42.3 service generated with myp
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "mypy_boto3_xray-1.42.3-py3-none-any.whl", hash = "sha256:a8bd87257e3931a415bee6b82892190f3588580dbaf0b54233f348a8f27ebccd"},
     {file = "mypy_boto3_xray-1.42.3.tar.gz", hash = "sha256:8092c41967eed2d0fee096a22b082bb107cfe2bb467a8dd7fbdc392593f1969c"},
@@ -2391,6 +2428,7 @@ description = "Python package for creating and manipulating graphs and networks"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "networkx-3.4.2-py3-none-any.whl", hash = "sha256:df5d4365b724cf81b8c6a7312509d0c22386097011ad1abe274afd5e9d3bbc5f"},
     {file = "networkx-3.4.2.tar.gz", hash = "sha256:307c3669428c5362aab27c8a1260aa8f47c4e91d3891f48be0141738d8d053e1"},
@@ -2430,14 +2468,14 @@ files = [
 
 [[package]]
 name = "pathspec"
-version = "1.0.3"
+version = "1.0.4"
 description = "Utility library for gitignore style pattern matching of file paths."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "pathspec-1.0.3-py3-none-any.whl", hash = "sha256:e80767021c1cc524aa3fb14bedda9c34406591343cc42797b386ce7b9354fb6c"},
-    {file = "pathspec-1.0.3.tar.gz", hash = "sha256:bac5cf97ae2c2876e2d25ebb15078eb04d76e4b98921ee31c6f85ade8b59444d"},
+    {file = "pathspec-1.0.4-py3-none-any.whl", hash = "sha256:fb6ae2fd4e7c921a165808a552060e722767cfa526f99ca5156ed2ce45a5c723"},
+    {file = "pathspec-1.0.4.tar.gz", hash = "sha256:0210e2ae8a21a9137c0d470578cb0e595af87edaa6ebf12ff176f14a02e0e645"},
 ]
 
 [package.extras]
@@ -2481,18 +2519,18 @@ testing = ["coverage", "pytest", "pytest-benchmark"]
 
 [[package]]
 name = "plux"
-version = "1.13.0"
+version = "1.14.0"
 description = "A dynamic code loading framework for building pluggable Python distributions"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "plux-1.13.0-py3-none-any.whl", hash = "sha256:0b68cb35fc3bf4b2a760ef6892ea734a1c0d241e2f403540005fa26436773a62"},
-    {file = "plux-1.13.0.tar.gz", hash = "sha256:0358a618883be270cf8dd6b5ae48e633a7fecd386cff6347c8560116f4688a75"},
+    {file = "plux-1.14.0-py3-none-any.whl", hash = "sha256:f117345586b17e1878bf339b595141f5f476bddd61bcc070182839f1b0287f7a"},
+    {file = "plux-1.14.0.tar.gz", hash = "sha256:e335d0bb4b67e1cb18abce8b92370568394f75edfb8505398f51c577525467fe"},
 ]
 
 [package.extras]
-dev = ["black (==22.3.0)", "isort (==5.9.1)", "pytest (==6.2.4)", "setuptools"]
+dev = ["build", "pytest (==8.4.1)", "ruff (==0.9.1)", "setuptools"]
 
 [[package]]
 name = "pre-commit"
@@ -2595,6 +2633,7 @@ files = [
     {file = "pydantic-2.12.5-py3-none-any.whl", hash = "sha256:e561593fccf61e8a20fc46dfc2dfe075b8be7d0188df33f221ad1f0139180f9d"},
     {file = "pydantic-2.12.5.tar.gz", hash = "sha256:4d351024c75c0f085a9febbb665ce8c0c6ec5d30e903bdb6394b7ede26aebb49"},
 ]
+markers = {dev = "python_version < \"3.14\""}
 
 [package.dependencies]
 annotated-types = ">=0.6.0"
@@ -2736,6 +2775,7 @@ files = [
     {file = "pydantic_core-2.41.5-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:56121965f7a4dc965bff783d70b907ddf3d57f6eba29b6d2e5dabfaf07799c51"},
     {file = "pydantic_core-2.41.5.tar.gz", hash = "sha256:08daa51ea16ad373ffd5e7606252cc32f07bc72b28284b6bc9c6df804816476e"},
 ]
+markers = {dev = "python_version < \"3.14\""}
 
 [package.dependencies]
 typing-extensions = ">=4.14.1"
@@ -2762,6 +2802,7 @@ description = "Python wrapper module around the OpenSSL library"
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "pyopenssl-25.3.0-py3-none-any.whl", hash = "sha256:1fda6fc034d5e3d179d39e59c1895c9faeaf40a79de5fc4cbbfbe0d36f4a77b6"},
     {file = "pyopenssl-25.3.0.tar.gz", hash = "sha256:c981cb0a3fd84e8602d7afc209522773b94c1c2446a3c710a75b06fe1beae329"},
@@ -2925,6 +2966,7 @@ description = "A Python slugify application that also handles Unicode"
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "python-slugify-8.0.4.tar.gz", hash = "sha256:59202371d1d05b54a9e7720c5e038f928f45daaffe41dd10822f3907b937c856"},
     {file = "python_slugify-8.0.4-py2.py3-none-any.whl", hash = "sha256:276540b79961052b66b7d116620b36518847f52d5fd9e3a70164fc8c50faa6b8"},
@@ -2943,6 +2985,7 @@ description = "World timezone definitions, modern and historical"
 optional = false
 python-versions = "*"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "pytz-2025.2-py2.py3-none-any.whl", hash = "sha256:5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00"},
     {file = "pytz-2025.2.tar.gz", hash = "sha256:360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3"},
@@ -2955,7 +2998,7 @@ description = "Python for Window Extensions"
 optional = false
 python-versions = "*"
 groups = ["dev"]
-markers = "sys_platform == \"win32\""
+markers = "python_version < \"3.14\" and sys_platform == \"win32\""
 files = [
     {file = "pywin32-311-cp310-cp310-win32.whl", hash = "sha256:d03ff496d2a0cd4a5893504789d4a15399133fe82517455e78bad62efbb7f0a3"},
     {file = "pywin32-311-cp310-cp310-win_amd64.whl", hash = "sha256:797c2772017851984b97180b0bebe4b620bb86328e8a884bb626156295a63b3b"},
@@ -3069,6 +3112,7 @@ description = "JSON Referencing + Python"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "referencing-0.37.0-py3-none-any.whl", hash = "sha256:381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231"},
     {file = "referencing-0.37.0.tar.gz", hash = "sha256:44aefc3142c5b842538163acb373e24cce6632bd54bdb01b21ad5863489f50d8"},
@@ -3086,6 +3130,7 @@ description = "Alternative regular expression module, to replace re."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "regex-2026.1.15-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:4e3dd93c8f9abe8aa4b6c652016da9a3afa190df5ad822907efe6b206c09896e"},
     {file = "regex-2026.1.15-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:97499ff7862e868b1977107873dd1a06e151467129159a6ffd07b66706ba3a9f"},
@@ -3288,6 +3333,7 @@ description = "Python bindings to Rust's persistent data structures (rpds)"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "rpds_py-0.30.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:679ae98e00c0e8d68a7fda324e16b90fd5260945b45d3b824c892cec9eea3288"},
     {file = "rpds_py-0.30.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4cc2206b76b4f576934f0ed374b10d7ca5f457858b157ca52064bdfc26b9fc00"},
@@ -3428,6 +3474,7 @@ description = "ruamel.yaml is a YAML parser/emitter that supports roundtrip pres
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "ruamel_yaml-0.18.17-py3-none-any.whl", hash = "sha256:9c8ba9eb3e793efdf924b60d521820869d5bf0cb9c6f1b82d82de8295e290b9d"},
     {file = "ruamel_yaml-0.18.17.tar.gz", hash = "sha256:9091cd6e2d93a3a4b157ddb8fabf348c3de7f1fb1381346d985b6b247dcd8d3c"},
@@ -3447,7 +3494,7 @@ description = "C version of reader, parser and emitter for ruamel.yaml derived f
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
-markers = "platform_python_implementation == \"CPython\" and python_version < \"3.15\""
+markers = "python_version < \"3.14\" and platform_python_implementation == \"CPython\""
 files = [
     {file = "ruamel_yaml_clib-0.2.15-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:88eea8baf72f0ccf232c22124d122a7f26e8a24110a0273d9bcddcb0f7e1fa03"},
     {file = "ruamel_yaml_clib-0.2.15-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:9b6f7d74d094d1f3a4e157278da97752f16ee230080ae331fcc219056ca54f77"},
@@ -3572,14 +3619,15 @@ files = [
 
 [[package]]
 name = "setuptools"
-version = "80.10.1"
+version = "80.10.2"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
-    {file = "setuptools-80.10.1-py3-none-any.whl", hash = "sha256:fc30c51cbcb8199a219c12cc9c281b5925a4978d212f84229c909636d9f6984e"},
-    {file = "setuptools-80.10.1.tar.gz", hash = "sha256:bf2e513eb8144c3298a3bd28ab1a5edb739131ec5c22e045ff93cd7f5319703a"},
+    {file = "setuptools-80.10.2-py3-none-any.whl", hash = "sha256:95b30ddfb717250edb492926c92b5221f7ef3fbcc2b07579bcd4a27da21d0173"},
+    {file = "setuptools-80.10.2.tar.gz", hash = "sha256:8b0e9d10c784bf7d262c4e5ec5d4ec94127ce206e8738f29a437945fbc219b70"},
 ]
 
 [package.extras]
@@ -3588,7 +3636,7 @@ core = ["importlib_metadata (>=6) ; python_version < \"3.10\"", "jaraco.functool
 cover = ["pytest-cov"]
 doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
 enabler = ["pytest-enabler (>=2.2)"]
-test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21) ; python_version >= \"3.9\" and sys_platform != \"cygwin\"", "jaraco.envs (>=2.2)", "jaraco.path (>=3.7.2)", "jaraco.test (>=5.5)", "packaging (>=24.2)", "pip (>=19.1)", "pyobjc (<12) ; sys_platform == \"darwin\" and python_version <= \"3.9\"", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-home (>=0.5)", "pytest-perf ; sys_platform != \"cygwin\"", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel (>=0.44.0)"]
+test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21) ; python_version >= \"3.9\" and sys_platform != \"cygwin\"", "jaraco.envs (>=2.2)", "jaraco.path (>=3.7.2)", "jaraco.test (>=5.5)", "packaging (>=24.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-home (>=0.5)", "pytest-perf ; sys_platform != \"cygwin\"", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel (>=0.44.0)"]
 type = ["importlib_metadata (>=7.0.2) ; python_version < \"3.10\"", "jaraco.develop (>=7.21) ; sys_platform != \"cygwin\"", "mypy (==1.14.*)", "pytest-mypy"]
 
 [[package]]
@@ -3610,6 +3658,7 @@ description = "Computer algebra system (CAS) in Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "sympy-1.14.0-py3-none-any.whl", hash = "sha256:e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5"},
     {file = "sympy-1.14.0.tar.gz", hash = "sha256:d3d3fe8df1e5a0b42f0e7bdf50541697dbe7d23746e894990c030e2b05e72517"},
@@ -3654,6 +3703,7 @@ description = "The most basic Text::Unidecode port"
 optional = false
 python-versions = "*"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
     {file = "text_unidecode-1.3-py2.py3-none-any.whl", hash = "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8"},
@@ -3724,6 +3774,7 @@ description = "Style preserving TOML library"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "tomlkit-0.13.3-py3-none-any.whl", hash = "sha256:c89c649d79ee40629a9fda55f8ace8c6a1b42deb912b2a8fd8d942ddadb606b0"},
     {file = "tomlkit-0.13.3.tar.gz", hash = "sha256:430cf247ee57df2b94ee3fbe588e71d362a941ebb545dec29b53961d61add2a1"},
@@ -3743,14 +3794,14 @@ files = [
 
 [[package]]
 name = "types-boto3"
-version = "1.42.34"
-description = "Type annotations for boto3 1.42.34 generated with mypy-boto3-builder 8.12.0"
+version = "1.42.35"
+description = "Type annotations for boto3 1.42.35 generated with mypy-boto3-builder 8.12.0"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "types_boto3-1.42.34-py3-none-any.whl", hash = "sha256:a1ec9aad643b0f8455257ba12141f4f4f38875c586f00ff0fc96dfe75aa9d1b5"},
-    {file = "types_boto3-1.42.34.tar.gz", hash = "sha256:86caec7ba201047ec78b170f87442cfe8ce288ce61199ea53bad255b33e8e00b"},
+    {file = "types_boto3-1.42.35-py3-none-any.whl", hash = "sha256:dfdb35b63986eee2d0e717833c7df1c2149691e675b0dbf56b43b3b8257c1a66"},
+    {file = "types_boto3-1.42.35.tar.gz", hash = "sha256:0cb3cbe4ea18867d8eeda516f21a4b2114b7aea7acdfde0900761e8b9896f417"},
 ]
 
 [package.dependencies]
@@ -3811,7 +3862,7 @@ bedrock-data-automation-runtime = ["types-boto3-bedrock-data-automation-runtime 
 bedrock-runtime = ["types-boto3-bedrock-runtime (>=1.42.0,<1.43.0)"]
 billing = ["types-boto3-billing (>=1.42.0,<1.43.0)"]
 billingconductor = ["types-boto3-billingconductor (>=1.42.0,<1.43.0)"]
-boto3 = ["boto3 (==1.42.34)"]
+boto3 = ["boto3 (==1.42.35)"]
 braket = ["types-boto3-braket (>=1.42.0,<1.43.0)"]
 budgets = ["types-boto3-budgets (>=1.42.0,<1.43.0)"]
 ce = ["types-boto3-ce (>=1.42.0,<1.43.0)"]
@@ -4228,6 +4279,7 @@ files = [
     {file = "typing_inspection-0.4.2-py3-none-any.whl", hash = "sha256:4ed1cacbdc298c220f1bd249ed5287caa16f34d44ef4e9c3d0cbad5b521545e7"},
     {file = "typing_inspection-0.4.2.tar.gz", hash = "sha256:ba561c48a67c5958007083d386c3295464928b01faa735ab8547c5692e87f464"},
 ]
+markers = {dev = "python_version < \"3.14\""}
 
 [package.dependencies]
 typing-extensions = ">=4.12.0"
@@ -4239,6 +4291,7 @@ description = "Provider of IANA time zone data"
 optional = false
 python-versions = ">=2"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "tzdata-2025.3-py2.py3-none-any.whl", hash = "sha256:06a47e5700f3081aab02b2e513160914ff0694bce9947d6b76ebd6bf57cfc5d1"},
     {file = "tzdata-2025.3.tar.gz", hash = "sha256:de39c2ca5dc7b0344f2eba86f49d614019d29f060fc4ebc8a417896a620b56a7"},
@@ -4251,6 +4304,7 @@ description = "tzinfo object for the local timezone"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "tzlocal-5.3.1-py3-none-any.whl", hash = "sha256:eb1a66c3ef5847adf7a834f1be0800581b683b5608e74f86ecbcef8ab91bb85d"},
     {file = "tzlocal-5.3.1.tar.gz", hash = "sha256:cceffc7edecefea1f595541dbd6e990cb1ea3d19bf01b2809f362a03dd7921fd"},
@@ -4309,6 +4363,7 @@ description = "Filesystem events monitoring"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "watchdog-4.0.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:ede7f010f2239b97cc79e6cb3c249e72962404ae3865860855d5cbe708b0fd22"},
     {file = "watchdog-4.0.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:a2cffa171445b0efa0726c561eca9a27d00a1f2b83846dbd5a4f639c4f8ca8e1"},
@@ -4375,6 +4430,7 @@ description = "Command line tool for manipulating wheel files"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
+markers = "python_version < \"3.14\""
 files = [
     {file = "wheel-0.46.3-py3-none-any.whl", hash = "sha256:4b399d56c9d9338230118d705d9737a2a468ccca63d5e813e2a4fc7815d8bc4d"},
     {file = "wheel-0.46.3.tar.gz", hash = "sha256:e3e79874b07d776c40bd6033f8ddf76a7dad46a7b8aa1b2787a83083519a1803"},
@@ -4571,5 +4627,5 @@ type = ["pytest-mypy"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.10"
-content-hash = "d2f5aed30bc050e1f0076668f68cbc6f5badf1d46234bddf86e4403864246dd6"
+python-versions = ">=3.10,<4.0"
+content-hash = "cd8e14727d1ea7b7557038621edc2cfa49193b903a69a0fd3262896b91c7189b"

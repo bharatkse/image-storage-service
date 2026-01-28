@@ -14,7 +14,6 @@ The **Makefile is the single entry point** for setup, development, testing, and 
 * Keep workflows **CI-friendly and reproducible**
 * Enforce **clean architecture, linting, typing, and tests**
 * Make onboarding trivial (**one-command setup**)
-* Be **easy to explain in interviews**
 
 ---
 

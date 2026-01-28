@@ -12,12 +12,20 @@ from core.utils.constants import (
 )
 
 
-class DynamoDBTable(Protocol):
-    """Minimal DynamoDB Table protocol."""
+class DynamoDBAdapterProtocol(Protocol):
+    """Repository-facing DynamoDB adapter protocol."""
 
-    def put_item(self, *, Item: dict[str, Any], **kwargs: Any) -> dict[str, Any]: ...
-    def get_item(self, *, Key: dict[str, Any]) -> dict[str, Any]: ...
-    def delete_item(self, *, Key: dict[str, Any]) -> dict[str, Any]: ...
+    def put_item(
+        self,
+        *,
+        item: dict[str, Any],
+        condition_expression: str | None = None,
+    ) -> dict[str, Any]: ...
+
+    def get_item(self, *, key: dict[str, Any]) -> dict[str, Any]: ...
+
+    def delete_item(self, *, key: dict[str, Any]) -> dict[str, Any]: ...
+
     def query(self, **kwargs: Any) -> dict[str, Any]: ...
 
 
@@ -25,9 +33,9 @@ class DynamoDBAdapter:
     """Low-level DynamoDB operations (mechanical, no error handling).
 
     This adapter:
-    - Wraps boto3 DynamoDB resource
-    - Does NOT handle errors (lets them bubble up)
-    - Domain implementations catch and translate errors
+    - Wraps boto3 DynamoDB Table
+    - Translates adapter API → boto3 API
+    - Lets boto3 exceptions bubble up
     """
 
     def __init__(self) -> None:
@@ -42,10 +50,9 @@ class DynamoDBAdapter:
             region_name=os.getenv(ENV_AWS_REGION),
         )
 
-        self.table: DynamoDBTable = cast(
-            DynamoDBTable,
-            dynamodb.Table(table_name),
-        )
+        # IMPORTANT:
+        # This is a boto3 Table object, NOT the adapter protocol.
+        self._table = dynamodb.Table(table_name)
 
     def put_item(
         self,
@@ -53,34 +60,19 @@ class DynamoDBAdapter:
         item: dict[str, Any],
         condition_expression: str | None = None,
     ) -> dict[str, Any]:
-        """Insert item into DynamoDB.
-
-        Raises boto3 exceptions - caught by domain implementation.
-        """
+        """Insert item into DynamoDB."""
         kwargs: dict[str, Any] = {"Item": item}
 
         if condition_expression:
             kwargs["ConditionExpression"] = condition_expression
 
-        return self.table.put_item(**kwargs)
+        return cast(dict[str, Any], self._table.put_item(**kwargs))
 
     def get_item(self, *, key: dict[str, Any]) -> dict[str, Any]:
-        """Retrieve item by key.
-
-        Raises boto3 exceptions - caught by domain implementation.
-        """
-        return self.table.get_item(Key=key)
+        return cast(dict[str, Any], self._table.get_item(Key=key))
 
     def delete_item(self, *, key: dict[str, Any]) -> dict[str, Any]:
-        """Delete item by key.
-
-        Raises boto3 exceptions - caught by domain implementation.
-        """
-        return self.table.delete_item(Key=key)
+        return cast(dict[str, Any], self._table.delete_item(Key=key))
 
     def query(self, **kwargs: Any) -> dict[str, Any]:
-        """Execute DynamoDB query.
-
-        Raises boto3 exceptions - caught by domain implementation.
-        """
-        return self.table.query(**kwargs)
+        return cast(dict[str, Any], self._table.query(**kwargs))

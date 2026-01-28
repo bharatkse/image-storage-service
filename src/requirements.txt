@@ -10,9 +10,9 @@ aws-xray-sdk==2.15.0 ; python_version >= "3.10" and python_version < "4.0" \
 boto3==1.42.1 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:137fbea593a30afa1b75656ea1f1ff8796be608a8c77f1b606c4473289679898 \
     --hash=sha256:9a8f9799afff600ff5cb43f57a619a5375ea71077ec958bda70e296378da7024
-botocore==1.42.34 ; python_version >= "3.10" and python_version < "4.0" \
-    --hash=sha256:92e44747da7890270d8dcc494ecc61fc315438440c55e00dc37a57d402b1bb66 \
-    --hash=sha256:94099b5d09d0c4bfa6414fb3cffd54275ce6e51d7ba016f17a0e79f9274f68f7
+botocore==1.42.35 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:40a6e0f16afe9e5d42e956f0b6d909869793fadb21780e409063601fc3d094b8 \
+    --hash=sha256:b89f527987691abbd1374c4116cc2711471ce48e6da502db17e92b17b2af8d47
 jmespath==1.0.1 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980 \
     --hash=sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe

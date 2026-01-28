@@ -1,34 +1,30 @@
 """Request validation utilities."""
 
+from collections.abc import Mapping, Sequence
 from typing import Any, TypeVar
 
-from pydantic import BaseModel, ValidationError
-
-from core.utils.response import ResponseBuilder
+from pydantic import BaseModel
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
-def sanitize_validation_errors(errors: list[dict[str, Any]]) -> list[dict[str, str]]:
+def sanitize_validation_errors(
+    errors: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
     """Sanitize Pydantic validation errors for API responses.
 
-    Removes sensitive/internal fields like:
-    - url
-    - ctx
-    - input
-    - internal exception details
+    Removes sensitive/internal fields and rewrites messages
+    into user-friendly validation errors.
     """
-    sanitized: list[dict[str, str]] = []
+    sanitized: list[dict[str, Any]] = []
 
     for err in errors:
         field = ".".join(str(x) for x in err.get("loc", [])) or "body"
         raw_msg = err.get("msg", "Invalid value")
 
-        # Remove noisy prefixes
         msg = raw_msg.replace("Value error,", "").strip()
-
-        # Friendly rewrites for common cases
         msg_lower = msg.lower()
+
         if "base64" in msg_lower:
             msg = "File must be a valid Base64-encoded string"
         elif "field required" in msg_lower:
@@ -49,34 +45,18 @@ def sanitize_validation_errors(errors: list[dict[str, Any]]) -> list[dict[str, s
 def validate_request(
     model: type[ModelT],
     data: dict[str, Any],
-    *,
-    request_id: str | None = None,
-    cors_origin: str | None = None,
-) -> tuple[bool, ModelT | dict[str, Any]]:
+) -> ModelT:
     """Validate request data against a Pydantic model.
 
     Args:
         model: Pydantic model class
         data: Input data to validate
-        request_id: Optional request ID for tracing
-        cors_origin: Optional CORS origin
 
     Returns:
-        (True, validated_model) on success
-        (False, error_response) on validation failure
-    """
-    try:
-        validated = model(**data)
-        return True, validated
+        Validated Pydantic model instance
 
-    except ValidationError as exc:
-        sanitized_errors = sanitize_validation_errors(exc.errors())
-        return (
-            False,
-            ResponseBuilder.validation_error(
-                message="Invalid request payload",
-                details=sanitized_errors,
-                request_id=request_id,
-                cors_origin=cors_origin,
-            ),
-        )
+    Raises:
+        ValidationError: If validation fails
+    """
+    instance: ModelT = model(**data)
+    return instance

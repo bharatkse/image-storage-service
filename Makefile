@@ -32,7 +32,7 @@ SHELL := /bin/bash
 	ls-lambda ls-api-id ls-api-key ls-api \
 	cf-build cf-deploy cf-status cf-logs cf-delete \
 	seed cleanup-seed guard-api \
-	restart restart-hard clean-local
+	restart-hard clean-local
 
 # ============================================================================
 # Configuration
@@ -136,9 +136,12 @@ help:
 	@echo "  make lint                 Run pre-commit hooks"
 	@echo "  make format               Format code"
 	@echo "  make type-check           Run mypy"
-	@echo "  make test                 Run tests"
 	@echo "  make coverage             Run tests with coverage"
 	@echo "  make clean                Remove build artifacts"
+	@echo ""
+	@echo "Tests:"
+	@echo "  make test                 Run functional tests"
+	@echo "  make e2e-test             Run end-to-end tests (API Gateway + Lambda)"
 	@echo ""
 	@echo "Docker / LocalStack:"
 	@echo "  make docker-up            Start LocalStack"
@@ -147,7 +150,6 @@ help:
 	@echo "  make docker-status        Show LocalStack status"
 	@echo "  make docker-health        Show LocalStack health"
 	@echo "  make docker-logs          Follow container logs"
-	@echo "  make docker-shell         Shell into LocalStack container"
 	@echo "  make docker-clean         Reset Docker resources"
 	@echo "  make docker-shell-localstack | docker-shell-swagger"
 	@echo ""
@@ -174,7 +176,6 @@ help:
 	@echo "  make cf-delete            Delete stack"
 	@echo ""
 	@echo "Convenience:"
-	@echo "  make restart              Redeploy stack"
 	@echo "  make restart-hard         Full reset and redeploy"
 	@echo ""
 	@echo "Logs:"
@@ -240,15 +241,25 @@ format:
 type-check:
 	@poetry run mypy src/
 
-test:
-	@poetry run pytest -v -s $(TEST)
-
 coverage:
 	@poetry run pytest --cov=src --cov-report=term-missing -v
 
 clean:
 	@rm -rf .aws-sam build dist .coverage htmlcov .pytest_cache
 	@find . -type d -name __pycache__ -exec rm -rf {} + || true
+
+# ============================================================================
+# functional Tests
+# ============================================================================
+test:
+	@poetry run pytest -v -s tests/functional $(TEST)
+
+# ============================================================================
+# E2E Tests (HTTP + Deployed Stack)
+# ============================================================================
+e2e-test: guard-api
+	@echo "Running E2E tests (requires deployed stack)..."
+	@poetry run pytest -v -s tests/e2e $(TEST)
 
 # ============================================================================
 # Docker / LocalStack
@@ -419,9 +430,12 @@ cf-logs:
 	  --stack-name $(STACK_NAME) --output table
 
 cf-delete:
-	@$(AWS_ENV) aws cloudformation delete-stack \
-	  --stack-name $(STACK_NAME) \
-	  2>/dev/null || echo "CloudFormation not reachable, skipping delete"
+	@echo "Deleting CloudFormation stack: $(STACK_NAME)"
+	@echo "1) Stopping Docker services..."
+	@$(MAKE) docker-clean || true
+
+	@echo "2) Cleaning LocalStack persistent data..."
+	@$(MAKE) clean-local || true
 
 # ============================================================================
 # Seed & Cleanup (API-based)

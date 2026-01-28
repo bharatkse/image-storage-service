@@ -374,7 +374,7 @@ Resources:
     Properties:
       FunctionName: !Sub "${ServiceName}-list-images-${Stage}"
       CodeUri: ../src/
-      Handler: handlers.list_image.handler.handler
+      Handler: handlers.list_images.handler.handler
       Role: !GetAtt ListImagesRole.Arn
       MemorySize: 512
       Timeout: 15

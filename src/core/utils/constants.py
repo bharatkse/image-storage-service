@@ -53,7 +53,8 @@ ERROR_CODE_INTERNAL_ERROR = "INTERNAL_ERROR"
 # File Upload Constraints
 # ============================================================================
 
-MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB in bytes
+MAX_FILE_SIZE = 4 * 1024 * 1024  # 4MB in bytes
+
 
 MIME_TYPE_EXTENSION_MAP: Final[dict[str, tuple[str, ...]]] = {
     "image/jpeg": ("jpg", "jpeg"),
