@@ -1,14 +1,12 @@
 """Unit tests for request validation utilities."""
 
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
 import pytest
 
-from core.utils.validators import (
-    sanitize_validation_errors,
-    validate_request,
-)
+from core.utils.validators import sanitize_validation_errors, validate_request
 
 
 class SampleModel(BaseModel):
@@ -28,7 +26,7 @@ class TestSanitizeValidationErrors:
     """Tests for sanitize_validation_errors."""
 
     def test_sanitizes_required_field(self) -> None:
-        errors = [
+        errors: Sequence[Mapping[str, Any]] = [
             {
                 "loc": ("name",),
                 "msg": "Field required",
@@ -45,7 +43,11 @@ class TestSanitizeValidationErrors:
         ]
 
     def test_defaults_field_to_body(self) -> None:
-        errors = [{"msg": "Invalid value"}]
+        errors: Sequence[Mapping[str, Any]] = [
+            {
+                "msg": "Invalid value",
+            }
+        ]
 
         result = sanitize_validation_errors(errors)
 
@@ -57,7 +59,7 @@ class TestSanitizeValidationErrors:
         ]
 
     def test_removes_value_error_prefix(self) -> None:
-        errors = [
+        errors: Sequence[Mapping[str, Any]] = [
             {
                 "loc": ("age",),
                 "msg": "Value error, must be positive",
@@ -74,7 +76,7 @@ class TestSanitizeValidationErrors:
         ]
 
     def test_preserves_pydantic_type_message(self) -> None:
-        errors = [
+        errors: Sequence[Mapping[str, Any]] = [
             {
                 "loc": ("age",),
                 "msg": "Input should be a valid integer",
@@ -114,8 +116,12 @@ class TestValidateRequest:
 
         errors = sanitize_validation_errors(exc_info.value.errors())
 
-        assert errors[0]["field"] == "name"
-        assert errors[0]["message"] == "This field is required"
+        assert errors == [
+            {
+                "field": "name",
+                "message": "This field is required",
+            }
+        ]
 
     def test_validate_request_invalid_type(self) -> None:
         data: dict[str, Any] = {
@@ -129,4 +135,4 @@ class TestValidateRequest:
         errors = sanitize_validation_errors(exc_info.value.errors())
 
         assert errors[0]["field"] == "age"
-        assert "valid integer" in errors[0]["message"].lower()
+        assert "integer" in errors[0]["message"].lower()

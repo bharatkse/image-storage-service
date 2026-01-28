@@ -1,12 +1,11 @@
 import base64
 from http import HTTPStatus
 import json
-from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
 
-from core.utils.response import JsonDict, ResponseBuilder, api_handler, handle_exception
+from core.utils.response import ResponseBuilder
 
 
 def parse_body(resp: dict[str, Any]) -> dict[str, Any]:
@@ -103,67 +102,3 @@ def test_binary_response() -> None:
     assert resp["isBase64Encoded"] is True
     assert base64.b64decode(resp["body"]) == content
     assert resp["headers"]["Content-Type"] == "image/png"
-
-
-def test_handle_exception_value_error() -> None:
-    resp = handle_exception(ValueError("bad"), request_id="req-1")
-    parsed = parse_body(resp)
-
-    assert resp["statusCode"] == HTTPStatus.BAD_REQUEST
-    assert parsed["message"] == "bad"
-
-
-def test_handle_exception_permission_error() -> None:
-    resp = handle_exception(PermissionError("denied"), request_id="req-2")
-    parsed = parse_body(resp)
-
-    assert resp["statusCode"] == HTTPStatus.FORBIDDEN
-    assert parsed["message"] == "denied"
-
-
-def test_handle_exception_generic() -> None:
-    resp = handle_exception(RuntimeError("boom"))
-    parsed = parse_body(resp)
-
-    assert resp["statusCode"] == HTTPStatus.INTERNAL_SERVER_ERROR
-    assert parsed["message"] == "boom"
-
-
-def test_api_handler_success() -> None:
-    @api_handler
-    def handler(
-        event: Any,
-        context: Any,
-        *,
-        cors_origin: str | None = None,
-    ) -> JsonDict:
-        return ResponseBuilder.ok(
-            {"msg": "ok"},
-            request_id=context.aws_request_id,
-            cors_origin=cors_origin,
-        )
-
-    context = SimpleNamespace(aws_request_id="req-ok")
-    resp = handler({}, context, cors_origin="*")
-
-    parsed = parse_body(resp)
-    assert parsed["msg"] == "ok"
-    assert parsed["request_id"] == "req-ok"
-
-
-def test_api_handler_catches_exception() -> None:
-    @api_handler
-    def handler(
-        event: Any,
-        context: Any,
-        *,
-        cors_origin: str | None = None,
-    ) -> JsonDict:
-        raise ValueError("Bad input")
-
-    context = SimpleNamespace(aws_request_id="req-err")
-    resp = handler({}, context)
-
-    parsed = parse_body(resp)
-    assert parsed["message"] == "Bad input"
-    assert parsed["request_id"] == "req-err"

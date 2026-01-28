@@ -96,13 +96,11 @@ class TestListImagesResponse:
             images=images,
             total_count=1,
             returned_count=1,
-            filter_applied=None,
             pagination=pagination,
         )
 
         assert response.total_count == 1
         assert response.returned_count == 1
-        assert response.filter_applied is None
         assert response.pagination.limit == 10
         assert len(response.images) == 1
         assert response.images[0].image_id == "img_1"

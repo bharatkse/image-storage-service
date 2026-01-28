@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from core.models.image import ImageMetadata, ListImagesResponse
 from core.models.pagination import PaginationInfo
+from core.utils.decorators import api_gateway_handler
 from core.utils.response import ResponseBuilder
 from core.utils.validators import sanitize_validation_errors, validate_request
 
@@ -21,6 +22,7 @@ tracer = Tracer()
 metrics = Metrics()
 
 
+@api_gateway_handler
 @tracer.capture_lambda_handler
 @metrics.log_metrics()
 def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
@@ -40,6 +42,19 @@ def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
         API Gateway-compatible HTTP response
 
     """
+    logger.info(
+        "Received image list request",
+        extra={
+            "http_method": event.get("httpMethod"),
+            "path": event.get("path"),
+            "query_params": event.get("queryStringParameters"),
+            "request_id": getattr(context, "aws_request_id", None),
+            "function_name": getattr(context, "function_name", None),
+            "remaining_time_ms": context.get_remaining_time_in_millis()
+            if hasattr(context, "get_remaining_time_in_millis")
+            else None,
+        },
+    )
 
     params = event.get("queryStringParameters") or {}
 
@@ -53,9 +68,9 @@ def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
             "Request validation failed",
             extra={"errors": exc.errors()},
         )
-        return ResponseBuilder.validation_error(
+        return ResponseBuilder.bad_request(
             message="Invalid request params",
-            details={"errors": sanitize_validation_errors(exc.errors())},
+            details={"errors": sanitize_validation_errors([err for err in exc.errors()])},
         )
 
     service = ListService()
@@ -74,11 +89,9 @@ def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
     except ValueError as exc:
         logger.exception("Error listing images")
         return ResponseBuilder.bad_request(str(exc))
-    except Exception as exc:
-        logger.exception("Internal error listing images")
-        return ResponseBuilder.internal_error(str(exc))
 
-    images: list[dict[str, Any]] = []
+    images: list[ImageMetadata] = []
+
     for item in items:
         try:
             images.append(
@@ -93,10 +106,12 @@ def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
                     s3_key=item["s3_key"],
                     file_size=int(item["file_size"]),
                     mime_type=item["mime_type"],
-                ).model_dump()
+                )
             )
         except Exception as exc:
             logger.warning("Skipping malformed item", exc_info=exc)
+
+    next_offset = request.offset + len(images) if has_more else None
 
     response = ListImagesResponse(
         images=images,
@@ -106,6 +121,7 @@ def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
             limit=request.limit,
             offset=request.offset,
             has_more=has_more,
+            next_offset=next_offset,
         ),
     )
 

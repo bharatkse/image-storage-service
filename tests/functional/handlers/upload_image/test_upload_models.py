@@ -5,6 +5,7 @@ import base64
 from pydantic import ValidationError
 import pytest
 
+from core.utils.constants import MAX_FILE_SIZE
 from handlers.upload_image.models import ImageUploadRequest
 
 
@@ -63,8 +64,7 @@ class TestUploadModels:
             ImageUploadRequest(**valid_payload(file=empty_b64))
 
     def test_file_size_exact_limit_allowed(self) -> None:
-        max_size = 50 * 1024 * 1024
-        req = ImageUploadRequest(**valid_payload(file=b64(b"a" * max_size)))
+        req = ImageUploadRequest(**valid_payload(file=b64(b"a" * MAX_FILE_SIZE)))
         assert req is not None
 
     def test_file_size_exceeded(self) -> None:

@@ -5,11 +5,9 @@ Centralized API response builder for AWS Lambda / API Gateway.
 from __future__ import annotations
 
 import base64
-from collections.abc import Callable
-from functools import wraps
 from http import HTTPStatus
 import json
-from typing import Any, Protocol
+from typing import Any
 
 from core.utils.constants import (
     CORS_HEADERS,
@@ -22,16 +20,6 @@ from core.utils.constants import (
 from core.utils.time import utc_now_iso
 
 JsonDict = dict[str, Any]
-
-
-class LambdaHandler(Protocol):
-    def __call__(
-        self,
-        event: Any,
-        context: Any,
-        *,
-        cors_origin: str | None = None,
-    ) -> JsonDict: ...
 
 
 class ResponseBuilder:
@@ -265,49 +253,3 @@ class ResponseBuilder:
             "body": base64.b64encode(content).decode("utf-8"),
             "isBase64Encoded": True,
         }
-
-
-def handle_exception(
-    exc: Exception,
-    *,
-    request_id: str | None = None,
-    cors_origin: str | None = None,
-) -> JsonDict:
-    if isinstance(exc, ValueError):
-        return ResponseBuilder.bad_request(str(exc), request_id=request_id, cors_origin=cors_origin)
-
-    if isinstance(exc, PermissionError):
-        return ResponseBuilder.forbidden(str(exc), request_id=request_id, cors_origin=cors_origin)
-
-    return ResponseBuilder.internal_error(str(exc), request_id=request_id, cors_origin=cors_origin)
-
-
-def api_handler(func: LambdaHandler) -> Callable[..., JsonDict]:
-    """Lambda handler decorator with exception handling and request_id injection."""
-
-    @wraps(func)
-    def wrapper(
-        event: Any,
-        context: Any,
-        *,
-        cors_origin: str | None = None,
-    ) -> JsonDict:
-        if event.get("httpMethod") == "OPTIONS":
-            return {
-                "statusCode": HTTPStatus.NO_CONTENT.value,
-                "headers": ResponseBuilder._build_headers(cors_origin),
-                "body": "",
-            }
-
-        request_id = getattr(context, "aws_request_id", None)
-
-        try:
-            return func(event, context, cors_origin=cors_origin)
-        except Exception as exc:  # noqa: BLE001
-            return handle_exception(
-                exc,
-                request_id=request_id,
-                cors_origin=cors_origin,
-            )
-
-    return wrapper

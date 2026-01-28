@@ -152,9 +152,9 @@ class TestListImageHandler:
 
         response = handler(event, lambda_context)
 
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400
         body = json.loads(response["body"])
-        assert body["error"] == "VALIDATION_FAILED"
+        assert body["error"] == "BAD_REQUEST"
 
     def test_list_missing_user_id(
         self,
@@ -164,7 +164,7 @@ class TestListImageHandler:
 
         response = handler(event, lambda_context)
 
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400
 
     def test_list_invalid_limit_type(
         self,
@@ -180,7 +180,7 @@ class TestListImageHandler:
 
         response = handler(event, lambda_context)
 
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400
 
     def test_list_default_sorting_created_at_desc(
         self,

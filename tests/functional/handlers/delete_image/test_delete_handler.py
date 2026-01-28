@@ -72,16 +72,16 @@ class TestDeleteImageHandler:
     def test_delete_missing_image_id(self, lambda_context) -> None:
         response = handler({"pathParameters": None}, lambda_context)
 
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400
         body = json.loads(response["body"])
-        assert body["error"] == "VALIDATION_FAILED"
+        assert body["error"] == "BAD_REQUEST"
 
     def test_delete_empty_path_parameters(self, lambda_context) -> None:
         response = handler({"pathParameters": {}}, lambda_context)
 
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400
         body = json.loads(response["body"])
-        assert body["error"] == "VALIDATION_FAILED"
+        assert body["error"] == "BAD_REQUEST"
 
     def test_delete_invalid_metadata_state(
         self,

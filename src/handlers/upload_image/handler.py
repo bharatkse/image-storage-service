@@ -16,6 +16,7 @@ from core.models.errors import (
     S3Error,
     ValidationError,
 )
+from core.utils.decorators import api_gateway_handler
 from core.utils.response import ResponseBuilder
 from core.utils.validators import sanitize_validation_errors, validate_request
 
@@ -27,6 +28,7 @@ tracer = Tracer()
 metrics = Metrics()
 
 
+@api_gateway_handler
 @tracer.capture_lambda_handler
 @metrics.log_metrics()
 def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
@@ -50,12 +52,25 @@ def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
     Returns:
         API Gateway-compatible HTTP response containing created image metadata
     """
+    logger.info(
+        "Received image upload request",
+        extra={
+            "http_method": event.get("httpMethod"),
+            "path": event.get("path"),
+            "query_params": event.get("queryStringParameters"),
+            "request_id": getattr(context, "aws_request_id", None),
+            "function_name": getattr(context, "function_name", None),
+            "remaining_time_ms": context.get_remaining_time_in_millis()
+            if hasattr(context, "get_remaining_time_in_millis")
+            else None,
+        },
+    )
 
     try:
         body = json.loads(event.get("body") or "{}")
     except json.JSONDecodeError as exc:
         logger.exception("Invalid JSON body received", exc_info=exc)
-        return ResponseBuilder.validation_error(message="Invalid JSON body")
+        return ResponseBuilder.bad_request(message="Invalid JSON body")
 
     try:
         request = validate_request(ImageUploadRequest, body)
@@ -64,9 +79,9 @@ def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
             "Request validation failed",
             extra={"errors": exc.errors()},
         )
-        return ResponseBuilder.validation_error(
+        return ResponseBuilder.bad_request(
             message="Invalid request params",
-            details={"errors": sanitize_validation_errors(exc.errors())},
+            details={"errors": sanitize_validation_errors([err for err in exc.errors()])},
         )
 
     try:
@@ -105,13 +120,6 @@ def handler(event: dict[str, Any], context: LambdaContext) -> dict[str, Any]:
             extra={"user_id": request.user_id},
         )
         return ResponseBuilder.internal_error(exc.message)
-
-    except Exception:
-        logger.exception(
-            "Unexpected error occurred while uploading image",
-            extra={"user_id": request.user_id},
-        )
-        return ResponseBuilder.internal_error("Unexpected error occurred while uploading image")
 
     response = ImageUploadResponse(
         image_id=metadata["image_id"],

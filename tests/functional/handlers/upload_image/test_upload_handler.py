@@ -92,7 +92,7 @@ class TestUploadHandler:
 
         response = handler(event, lambda_context)
 
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400
 
     def test_upload_file_size_exceeded(self, lambda_context) -> None:
         event = {
@@ -107,7 +107,7 @@ class TestUploadHandler:
 
         response = handler(event, lambda_context)
 
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400
 
     def test_upload_invalid_image_name(self, lambda_context) -> None:
         event = {
@@ -122,15 +122,15 @@ class TestUploadHandler:
 
         response = handler(event, lambda_context)
 
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400
 
     def test_upload_invalid_json(self, lambda_context) -> None:
         response = handler({"body": "{bad-json"}, lambda_context)
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400
 
     def test_upload_empty_body(self, lambda_context) -> None:
         response = handler({"body": None}, lambda_context)
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400
 
     def test_upload_s3_failure(self, lambda_context) -> None:
         with patch(
@@ -232,7 +232,7 @@ class TestUploadHandler:
 
         assert response["statusCode"] == 500
         body = json.loads(response["body"])
-        assert "Unexpected error occurred" in body["message"]
+        assert "We're experiencing technical difficulties. Please try again in a few moments" in body["message"]
 
     def test_upload_decode_file_validation_error(self, lambda_context) -> None:
         with patch(
@@ -266,4 +266,4 @@ class TestUploadHandler:
 
         response = handler(event, lambda_context)
 
-        assert response["statusCode"] == 422
+        assert response["statusCode"] == 400

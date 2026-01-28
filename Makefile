@@ -136,9 +136,12 @@ help:
 	@echo "  make lint                 Run pre-commit hooks"
 	@echo "  make format               Format code"
 	@echo "  make type-check           Run mypy"
-	@echo "  make test                 Run tests"
 	@echo "  make coverage             Run tests with coverage"
 	@echo "  make clean                Remove build artifacts"
+	@echo ""
+	@echo "Tests:"
+	@echo "  make test                 Run functional tests"
+	@echo "  make e2e-test             Run end-to-end tests (API Gateway + Lambda)"
 	@echo ""
 	@echo "Docker / LocalStack:"
 	@echo "  make docker-up            Start LocalStack"
@@ -238,15 +241,25 @@ format:
 type-check:
 	@poetry run mypy src/
 
-test:
-	@poetry run pytest -v -s $(TEST)
-
 coverage:
 	@poetry run pytest --cov=src --cov-report=term-missing -v
 
 clean:
 	@rm -rf .aws-sam build dist .coverage htmlcov .pytest_cache
 	@find . -type d -name __pycache__ -exec rm -rf {} + || true
+
+# ============================================================================
+# functional Tests
+# ============================================================================
+test:
+	@poetry run pytest -v -s tests/functional $(TEST)
+
+# ============================================================================
+# E2E Tests (HTTP + Deployed Stack)
+# ============================================================================
+e2e-test: guard-api
+	@echo "Running E2E tests (requires deployed stack)..."
+	@poetry run pytest -v -s tests/e2e $(TEST)
 
 # ============================================================================
 # Docker / LocalStack

@@ -1,16 +1,51 @@
 """Thin adapter for interacting with Amazon S3."""
 
+from collections.abc import Mapping
 import os
-from typing import Any, Protocol, cast
+from typing import Any, Protocol
 
 import boto3
-from botocore.client import BaseClient
 
 from core.utils.constants import (
     ENV_AWS_ENDPOINT_URL,
     ENV_AWS_REGION,
     ENV_IMAGE_S3_BUCKET_NAME,
 )
+
+
+class _Boto3S3Client(Protocol):
+    """Internal typing for boto3 S3 client (AWS-facing only)."""
+
+    def put_object(
+        self,
+        *,
+        Bucket: str,
+        Key: str,
+        Body: bytes,
+        ContentType: str,
+        Metadata: Mapping[str, str],
+    ) -> Any: ...
+
+    def get_object(
+        self,
+        *,
+        Bucket: str,
+        Key: str,
+    ) -> Mapping[str, Any]: ...
+
+    def delete_object(
+        self,
+        *,
+        Bucket: str,
+        Key: str,
+    ) -> Any: ...
+
+    def generate_presigned_url(
+        self,
+        ClientMethod: str,
+        Params: Mapping[str, Any],
+        ExpiresIn: int,
+    ) -> str: ...
 
 
 class S3AdapterProtocol(Protocol):
@@ -25,7 +60,7 @@ class S3AdapterProtocol(Protocol):
         metadata: dict[str, str],
     ) -> None: ...
 
-    def get_object(self, *, key: str) -> dict[str, Any]: ...
+    def get_object(self, *, key: str) -> Mapping[str, Any]: ...
 
     def delete_object(self, *, key: str) -> None: ...
 
@@ -54,7 +89,7 @@ class S3Adapter:
             raise RuntimeError(f"{ENV_IMAGE_S3_BUCKET_NAME} environment variable is not set")
 
         self._bucket = bucket_name
-        self._client: BaseClient = boto3.client(
+        self._client: _Boto3S3Client = boto3.client(
             "s3",
             endpoint_url=os.getenv(ENV_AWS_ENDPOINT_URL),
             region_name=os.getenv(ENV_AWS_REGION),
@@ -79,11 +114,11 @@ class S3Adapter:
             Metadata=metadata,
         )
 
-    def get_object(self, *, key: str) -> dict[str, Any]:
+    def get_object(self, *, key: str) -> Mapping[str, Any]:
         """Fetch object from S3.
         Raises boto3 exceptions - caught by domain implementation.
         """
-        response: dict[str, Any] = self._client.get_object(
+        response = self._client.get_object(
             Bucket=self._bucket,
             Key=key,
         )
@@ -106,11 +141,8 @@ class S3Adapter:
         expires_in: int,
     ) -> str:
         """Generate a pre-signed S3 URL."""
-        return cast(
-            str,
-            self._client.generate_presigned_url(
-                ClientMethod=method,
-                Params={**params, "Bucket": self._bucket},
-                ExpiresIn=expires_in,
-            ),
+        return self._client.generate_presigned_url(
+            ClientMethod=method,
+            Params={**params, "Bucket": self._bucket},
+            ExpiresIn=expires_in,
         )

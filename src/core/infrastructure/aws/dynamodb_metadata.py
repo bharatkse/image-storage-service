@@ -3,7 +3,7 @@
 from typing import Any
 
 from aws_lambda_powertools import Logger
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import ConditionBase, Key
 from botocore.exceptions import ClientError
 
 from core.infrastructure.adapters.dynamodb_adapter import DynamoDBAdapter, DynamoDBAdapterProtocol
@@ -210,7 +210,7 @@ class DynamoDBMetadata(ImageMetadataRepository):
             )
 
         # Build key condition expression
-        key_condition = Key("user_id").eq(user_id)
+        key_condition: ConditionBase = Key("user_id").eq(user_id)
 
         if start_date and end_date:
             key_condition &= Key("created_at").between(start_date, end_date)

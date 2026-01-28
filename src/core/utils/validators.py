@@ -1,6 +1,7 @@
 """Request validation utilities."""
 
-from typing import Any, TypeVar, cast
+from collections.abc import Mapping, Sequence
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
@@ -8,14 +9,14 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
 def sanitize_validation_errors(
-    errors: list[dict[str, Any]],
-) -> list[dict[str, str]]:
+    errors: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
     """Sanitize Pydantic validation errors for API responses.
 
     Removes sensitive/internal fields and rewrites messages
     into user-friendly validation errors.
     """
-    sanitized: list[dict[str, str]] = []
+    sanitized: list[dict[str, Any]] = []
 
     for err in errors:
         field = ".".join(str(x) for x in err.get("loc", [])) or "body"
@@ -57,4 +58,5 @@ def validate_request(
     Raises:
         ValidationError: If validation fails
     """
-    return cast(ModelT, model(**data))
+    instance: ModelT = model(**data)
+    return instance
